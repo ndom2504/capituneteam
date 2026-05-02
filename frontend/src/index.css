@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body, #root {
+    @apply bg-capitune-black text-capitune-white min-h-screen;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
+
+@layer utilities {
+  .btn-primary {
+    @apply bg-capitune-white text-capitune-black px-4 py-2 rounded-full font-semibold hover:bg-gray-200 transition;
+  }
+  .btn-outline {
+    @apply border border-capitune-border text-capitune-white px-4 py-2 rounded-full hover:bg-capitune-gray transition;
+  }
+  .input-dark {
+    @apply bg-capitune-black border border-capitune-border rounded-lg px-3 py-2 text-capitune-white placeholder-capitune-text focus:outline-none focus:border-capitune-white;
+  }
+  .card-dark {
+    @apply bg-capitune-gray border border-capitune-border rounded-xl p-4;
+  }
+}
