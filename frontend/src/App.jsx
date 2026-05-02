@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
 import Layout from './components/Layout.jsx';
 import Login from './pages/Login.jsx';
+import About from './pages/About.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Dossiers from './pages/Dossiers.jsx';
 import DossierDetail from './pages/DossierDetail.jsx';
@@ -21,6 +22,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/about" element={<About />} />
       <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/dossiers" element={<ProtectedRoute><Dossiers /></ProtectedRoute>} />
       <Route path="/dossiers/:id" element={<ProtectedRoute><DossierDetail /></ProtectedRoute>} />

@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
-import { LayoutDashboard, FolderOpen, Ticket, MessageSquare, User, LogOut, Menu, X } from 'lucide-react';
+import { LayoutDashboard, FolderOpen, Ticket, MessageSquare, User, LogOut, Menu, X, Info } from 'lucide-react';
 import { useState } from 'react';
 
 const navItems = [
@@ -8,6 +8,7 @@ const navItems = [
   { path: '/dossiers', label: 'Dossiers', icon: FolderOpen },
   { path: '/tickets', label: 'Tickets', icon: Ticket },
   { path: '/messages', label: 'Messages', icon: MessageSquare },
+  { path: '/about', label: 'À propos', icon: Info },
   { path: '/profile', label: 'Profil', icon: User },
 ];
 
