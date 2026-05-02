@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { auth } from '../firebase.js';
-import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signOut } from 'firebase/auth';
+import * as firebaseAuth from 'firebase/auth';
+
+const demoMode = !auth;
 
 const AuthContext = createContext(null);
 
@@ -10,6 +12,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   const getToken = async () => {
+    if (demoMode) return 'demo-token';
     if (!firebaseUser) return null;
     return firebaseUser.getIdToken();
   };
@@ -30,7 +33,11 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (user) => {
+    if (demoMode) {
+      setLoading(false);
+      return;
+    }
+    const unsub = firebaseAuth.onAuthStateChanged(auth, async (user) => {
       setFirebaseUser(user);
       if (user) {
         await fetchDbUser(user);
@@ -43,14 +50,26 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    const cred = await signInWithEmailAndPassword(auth, email, password);
+    if (demoMode) {
+      const demoUser = { uid: 'demo', email, displayName: 'Demo User' };
+      setFirebaseUser(demoUser);
+      setDbUser({ id: 1, firebase_uid: 'demo', email, display_name: 'Demo User', role: 'client' });
+      return demoUser;
+    }
+    const cred = await firebaseAuth.signInWithEmailAndPassword(auth, email, password);
     await fetchDbUser(cred.user);
     return cred.user;
   };
 
   const register = async (email, password, displayName, role = 'client') => {
-    const cred = await createUserWithEmailAndPassword(auth, email, password);
-    await updateProfile(cred.user, { displayName });
+    if (demoMode) {
+      const demoUser = { uid: 'demo', email, displayName };
+      setFirebaseUser(demoUser);
+      setDbUser({ id: 1, firebase_uid: 'demo', email, display_name: displayName, role });
+      return demoUser;
+    }
+    const cred = await firebaseAuth.createUserWithEmailAndPassword(auth, email, password);
+    await firebaseAuth.updateProfile(cred.user, { displayName });
     const token = await cred.user.getIdToken();
     await fetch('/api/auth/register', {
       method: 'POST',
@@ -62,7 +81,12 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    await signOut(auth);
+    if (demoMode) {
+      setFirebaseUser(null);
+      setDbUser(null);
+      return;
+    }
+    await firebaseAuth.signOut(auth);
     setDbUser(null);
   };
 
