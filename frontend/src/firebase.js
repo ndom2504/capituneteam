@@ -1,7 +1,12 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 
-const hasFirebaseConfig = import.meta.env.VITE_FIREBASE_API_KEY && import.meta.env.VITE_FIREBASE_API_KEY !== 'demo-key';
+const apiKey = import.meta.env.VITE_FIREBASE_API_KEY || '';
+const isValidKey = apiKey.startsWith('AIza') && apiKey.length > 20;
+
+const hasFirebaseConfig = isValidKey &&
+  import.meta.env.VITE_FIREBASE_AUTH_DOMAIN &&
+  import.meta.env.VITE_FIREBASE_PROJECT_ID;
 
 const firebaseConfig = hasFirebaseConfig ? {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -18,6 +23,8 @@ let auth = null;
 if (firebaseConfig) {
   app = initializeApp(firebaseConfig);
   auth = getAuth(app);
+} else {
+  console.info('Firebase not configured. Running in demo mode.');
 }
 
 export { auth, app };
