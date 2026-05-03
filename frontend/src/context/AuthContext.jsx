@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { auth } from '../firebase.js';
+import { auth, googleProvider } from '../firebase.js';
 import * as firebaseAuth from 'firebase/auth';
 
 const demoMode = !auth;
@@ -80,6 +80,39 @@ export const AuthProvider = ({ children }) => {
     return cred.user;
   };
 
+  const loginWithGoogle = async (role = 'client') => {
+    if (demoMode) {
+      const demoUser = { uid: 'demo-google', email: 'demo@google.com', displayName: 'Demo Google' };
+      setFirebaseUser(demoUser);
+      setDbUser({ id: 2, firebase_uid: 'demo-google', email: 'demo@google.com', display_name: 'Demo Google', role });
+      return { user: demoUser, isNew: true };
+    }
+    const cred = await firebaseAuth.signInWithPopup(auth, googleProvider);
+    const token = await cred.user.getIdToken();
+
+    // Check if user exists in our DB
+    const res = await fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } });
+    if (res.ok) {
+      const data = await res.json();
+      setDbUser(data);
+      setFirebaseUser(cred.user);
+      return { user: cred.user, isNew: false };
+    }
+
+    // New user - register with chosen role
+    await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({
+        displayName: cred.user.displayName || cred.user.email.split('@')[0],
+        role,
+      }),
+    });
+    await fetchDbUser(cred.user);
+    setFirebaseUser(cred.user);
+    return { user: cred.user, isNew: true };
+  };
+
   const logout = async () => {
     if (demoMode) {
       setFirebaseUser(null);
@@ -95,7 +128,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ firebaseUser, dbUser, loading, login, register, logout, getToken, refreshUser }}>
+    <AuthContext.Provider value={{ firebaseUser, dbUser, loading, login, register, loginWithGoogle, logout, getToken, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

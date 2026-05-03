@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 
 const apiKey = import.meta.env.VITE_FIREBASE_API_KEY || '';
 const isValidKey = apiKey.startsWith('AIza') && apiKey.length > 20;
@@ -19,13 +19,15 @@ const firebaseConfig = hasFirebaseConfig ? {
 
 let app = null;
 let auth = null;
+let googleProvider = null;
 
 if (firebaseConfig) {
   app = initializeApp(firebaseConfig);
   auth = getAuth(app);
+  googleProvider = new GoogleAuthProvider();
 } else {
   console.info('Firebase not configured. Running in demo mode.');
 }
 
-export { auth, app };
+export { auth, app, googleProvider };
 export default app;

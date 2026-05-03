@@ -1,15 +1,16 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useNavigate } from 'react-router-dom';
-import { Globe, Shield, Users, TrendingUp, Heart, Rocket, ChevronRight } from 'lucide-react';
+import { Globe, Shield, Users, TrendingUp, Heart, Rocket, ChevronRight, Mail } from 'lucide-react';
 
 export default function Login() {
   const [isRegister, setIsRegister] = useState(false);
+  const [selectedRole, setSelectedRole] = useState('client');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [error, setError] = useState('');
-  const { login, register } = useAuth();
+  const { login, register, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -17,13 +18,29 @@ export default function Login() {
     setError('');
     try {
       if (isRegister) {
-        await register(email, password, displayName, 'client');
+        await register(email, password, displayName, selectedRole);
       } else {
         await login(email, password);
       }
       navigate('/');
     } catch (err) {
       setError(err.message);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setError('');
+    try {
+      const result = await loginWithGoogle(selectedRole);
+      if (result.isNew) {
+        // New user registered with selected role
+        navigate('/');
+      } else {
+        // Existing user
+        navigate('/');
+      }
+    } catch (err) {
+      setError(err.message || 'Erreur lors de la connexion Google');
     }
   };
 
@@ -99,6 +116,48 @@ export default function Login() {
               ? 'Créez votre compte et commencez votre aventure canadienne.'
               : 'Connectez-vous pour accéder à votre espace personnel.'}
           </p>
+
+          <div className="mb-4">
+            <label className="block text-sm text-capitune-text mb-2">Je suis un</label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setSelectedRole('client')}
+                className={`flex-1 py-2 px-4 rounded-lg border text-sm font-medium transition ${
+                  selectedRole === 'client'
+                    ? 'border-capitune-white bg-capitune-white/10 text-capitune-white'
+                    : 'border-capitune-border text-capitune-text hover:border-capitune-white'
+                }`}
+              >
+                Client
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedRole('conseiller')}
+                className={`flex-1 py-2 px-4 rounded-lg border text-sm font-medium transition ${
+                  selectedRole === 'conseiller'
+                    ? 'border-capitune-white bg-capitune-white/10 text-capitune-white'
+                    : 'border-capitune-border text-capitune-text hover:border-capitune-white'
+                }`}
+              >
+                Conseiller
+              </button>
+            </div>
+          </div>
+
+          <button
+            onClick={handleGoogleSignIn}
+            className="w-full flex items-center justify-center gap-3 bg-capitune-white text-capitune-black font-semibold py-3 px-4 rounded-lg hover:bg-gray-100 transition mb-4"
+          >
+            <Mail size={18} />
+            {isRegister ? 'S\'inscrire avec Google' : 'Continuer avec Google'}
+          </button>
+
+          <div className="flex items-center gap-3 mb-6">
+            <div className="flex-1 h-px bg-capitune-border" />
+            <span className="text-xs text-capitune-text uppercase">ou</span>
+            <div className="flex-1 h-px bg-capitune-border" />
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {isRegister && (
