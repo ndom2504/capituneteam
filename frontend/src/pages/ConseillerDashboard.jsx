@@ -264,7 +264,19 @@ export default function ConseillerDashboard() {
                   )}
 
                   {dossier.file_url && (
-                    <div className="mt-3">
+                    <div className="mt-3 space-y-2">
+                      <div className="bg-capitune-gray rounded-lg p-2 border border-capitune-border">
+                        <img
+                          src={dossier.file_url.replace('/upload/', '/upload/f_jpg,q_auto,w_300,h_400,c_pad/')}
+                          alt="Aperçu du CV"
+                          className="w-full h-40 object-cover rounded"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.nextElementSibling.style.display = 'block';
+                          }}
+                        />
+                        <p className="text-capitune-text text-xs text-center hidden">Aperçu non disponible</p>
+                      </div>
                       <a
                         href={dossier.file_url}
                         target="_blank"
@@ -273,7 +285,7 @@ export default function ConseillerDashboard() {
                         className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm"
                       >
                         <Download size={16} />
-                        Voir le CV
+                        Télécharger le PDF
                       </a>
                     </div>
                   )}

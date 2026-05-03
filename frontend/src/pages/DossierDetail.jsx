@@ -183,16 +183,30 @@ export default function DossierDetail() {
           {dossier.file_url && (
             <div>
               <h3 className="text-lg font-semibold mb-2">CV</h3>
-              <a
-                href={dossier.file_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                download
-                className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300"
-              >
-                <Download size={18} />
-                Voir le CV
-              </a>
+              <div className="space-y-3">
+                <div className="bg-capitune-gray rounded-lg p-4 border border-capitune-border">
+                  <img
+                    src={dossier.file_url.replace('/upload/', '/upload/f_jpg,q_auto/')}
+                    alt="Aperçu du CV"
+                    className="w-full max-h-96 object-contain rounded"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextElementSibling.style.display = 'block';
+                    }}
+                  />
+                  <p className="text-capitune-text text-sm text-center hidden">Aperçu non disponible</p>
+                </div>
+                <a
+                  href={dossier.file_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  download
+                  className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300"
+                >
+                  <Download size={18} />
+                  Télécharger le PDF
+                </a>
+              </div>
             </div>
           )}
 
