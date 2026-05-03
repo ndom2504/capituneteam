@@ -15,7 +15,6 @@ export default function CreateDossier() {
     domaine_etudes: '',
     metier: '',
     annees_experience: '',
-    experience_travail: '',
     motivation: '',
   });
   const [file, setFile] = useState(null);
@@ -237,30 +236,52 @@ export default function CreateDossier() {
             </div>
             <div>
               <label className="block text-xs text-capitune-text uppercase mb-2">Domaine d'études</label>
-              <input
-                type="text"
+              <select
                 name="domaine_etudes"
                 value={formData.domaine_etudes}
                 onChange={handleInputChange}
                 className="input-dark w-full"
                 disabled={dossierId}
                 required
-              />
+              >
+                <option value="">Sélectionner</option>
+                <option value="informatique">Informatique</option>
+                <option value="ingenierie">Ingénierie</option>
+                <option value="sante">Santé</option>
+                <option value="business">Business</option>
+                <option value="droit">Droit</option>
+                <option value="education">Éducation</option>
+                <option value="arts">Arts</option>
+                <option value="sciences">Sciences</option>
+                <option value="autre">Autre</option>
+              </select>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs text-capitune-text uppercase mb-2">Métier</label>
-              <input
-                type="text"
+              <select
                 name="metier"
                 value={formData.metier}
                 onChange={handleInputChange}
                 className="input-dark w-full"
                 disabled={dossierId}
                 required
-              />
+              >
+                <option value="">Sélectionner</option>
+                <option value="developpeur">Développeur</option>
+                <option value="ingenieur">Ingénieur</option>
+                <option value="medecin">Médecin</option>
+                <option value="infirmier">Infirmier</option>
+                <option value="enseignant">Enseignant</option>
+                <option value="comptable">Comptable</option>
+                <option value="avocat">Avocat</option>
+                <option value="gestionnaire">Gestionnaire</option>
+                <option value="artisan">Artisan</option>
+                <option value="commercial">Commercial</option>
+                <option value="autre">Autre</option>
+              </select>
             </div>
             <div>
               <label className="block text-xs text-capitune-text uppercase mb-2">Années d'expérience</label>
@@ -278,19 +299,6 @@ export default function CreateDossier() {
           </div>
 
           <div>
-            <label className="block text-xs text-capitune-text uppercase mb-2">Expérience de travail</label>
-            <textarea
-              name="experience_travail"
-              value={formData.experience_travail}
-              onChange={handleInputChange}
-              className="input-dark w-full"
-              rows={3}
-              disabled={dossierId}
-              required
-            />
-          </div>
-
-          <div>
             <label className="block text-xs text-capitune-text uppercase mb-2">Motivation</label>
             <textarea
               name="motivation"
@@ -304,7 +312,7 @@ export default function CreateDossier() {
           </div>
 
           <div>
-            <label className="block text-xs text-capitune-text uppercase mb-2">Document (PDF, Image)</label>
+            <label className="block text-xs text-capitune-text uppercase mb-2">CV (PDF, Image)</label>
             <div className="flex items-center gap-4">
               <label className="flex items-center gap-2 btn-outline cursor-pointer">
                 <Upload size={18} />
