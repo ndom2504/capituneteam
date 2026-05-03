@@ -27,9 +27,9 @@ export default function Profile() {
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Validate file size (max 10MB for base64 compatibility)
-      if (file.size > 10 * 1024 * 1024) {
-        setMessage('L\'image est trop grande. Maximum 10MB.');
+      // Validate file size (max 2MB to stay within Vercel's 4.5MB payload limit after base64 encoding)
+      if (file.size > 2 * 1024 * 1024) {
+        setMessage('L\'image est trop grande. Maximum 2MB.');
         return;
       }
       setPhotoFile(file);
