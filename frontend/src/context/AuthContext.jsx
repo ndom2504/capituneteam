@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { auth, googleProvider } from '../firebase.js';
+import { apiFetch } from '../config/api.js';
 import * as firebaseAuth from 'firebase/auth';
 
 const demoMode = !auth;
@@ -20,7 +21,7 @@ export const AuthProvider = ({ children }) => {
   const fetchDbUser = async (user) => {
     try {
       const token = await user.getIdToken();
-      const res = await fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } });
+      const res = await apiFetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } });
       if (res.ok) {
         const data = await res.json();
         setDbUser(data);
@@ -71,7 +72,7 @@ export const AuthProvider = ({ children }) => {
     const cred = await firebaseAuth.createUserWithEmailAndPassword(auth, email, password);
     await firebaseAuth.updateProfile(cred.user, { displayName });
     const token = await cred.user.getIdToken();
-    await fetch('/api/auth/register', {
+    await apiFetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ displayName, role }),
@@ -91,7 +92,7 @@ export const AuthProvider = ({ children }) => {
     const token = await cred.user.getIdToken();
 
     // Check if user exists in our DB
-    const res = await fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } });
+    const res = await apiFetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } });
     if (res.ok) {
       const data = await res.json();
       setDbUser(data);
@@ -100,7 +101,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     // New user - register with chosen role
-    await fetch('/api/auth/register', {
+    await apiFetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({
