@@ -9,6 +9,39 @@ const upload = multer({ storage });
 
 const router = Router();
 
+router.get('/', verifyToken, loadUser, async (req, res) => {
+  try {
+    const uid = req.user.dbUser.id;
+    let result;
+    if (req.user.role === 'conseiller') {
+      // For conseillers, fetch messages from dossiers assigned to them
+      result = await query(
+        `SELECT m.*, u.display_name as sender_name, d.programme
+         FROM messages m
+         JOIN users u ON m.sender_id = u.id
+         JOIN dossiers d ON m.dossier_id = d.id
+         WHERE d.conseiller_id = $1
+         ORDER BY m.created_at DESC`,
+        [uid]
+      );
+    } else {
+      // For clients, fetch messages from their dossiers
+      result = await query(
+        `SELECT m.*, u.display_name as sender_name, d.programme
+         FROM messages m
+         JOIN users u ON m.sender_id = u.id
+         JOIN dossiers d ON m.dossier_id = d.id
+         WHERE d.client_id = $1
+         ORDER BY m.created_at DESC`,
+        [uid]
+      );
+    }
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.get('/:dossierId', verifyToken, loadUser, async (req, res) => {
   try {
     const dossierResult = await query('SELECT client_id, conseiller_id FROM dossiers WHERE id = $1', [req.params.dossierId]);

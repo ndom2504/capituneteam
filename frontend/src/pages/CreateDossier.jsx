@@ -144,6 +144,7 @@ export default function CreateDossier() {
 
     try {
       const token = await getToken();
+      console.log('Sending dossier:', newDossierId, 'to conseiller:', selectedConseiller);
       const response = await fetch(`/api/dossiers/${newDossierId}/envoyer`, {
         method: 'POST',
         headers: {
@@ -154,14 +155,19 @@ export default function CreateDossier() {
       });
 
       if (response.ok) {
+        const result = await response.json();
+        console.log('Dossier sent result:', result);
         setMessage('Dossier envoyé au conseiller avec succès');
         setTimeout(() => {
           navigate('/dossiers');
         }, 2000);
       } else {
+        const error = await response.json();
+        console.error('Error sending dossier:', error);
         setMessage('Erreur lors de l\'envoi du dossier');
       }
     } catch (err) {
+      console.error('Error sending dossier:', err);
       setMessage('Erreur de connexion');
     } finally {
       setSaving(false);
