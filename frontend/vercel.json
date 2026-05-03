@@ -5,7 +5,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://capitune-backend.onrender.com/api/$1"
+      "destination": "https://api.capitune.com/api/$1"
     },
     {
       "source": "/(.*)",
