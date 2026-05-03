@@ -269,6 +269,7 @@ export default function ConseillerDashboard() {
                         href={dossier.file_url}
                         target="_blank"
                         rel="noopener noreferrer"
+                        download
                         className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm"
                       >
                         <Download size={16} />
