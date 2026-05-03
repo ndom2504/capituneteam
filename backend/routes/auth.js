@@ -10,9 +10,10 @@ router.post('/register', verifyToken, async (req, res) => {
     const uid = req.user.uid;
     const email = req.user.email;
 
+    // Upsert: return existing user if already registered
     const existing = await query('SELECT * FROM users WHERE firebase_uid = $1', [uid]);
     if (existing.rows.length) {
-      return res.status(409).json({ error: 'User already exists' });
+      return res.json(existing.rows[0]);
     }
 
     const result = await query(
