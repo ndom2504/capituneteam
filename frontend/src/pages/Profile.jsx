@@ -32,11 +32,46 @@ export default function Profile() {
         setMessage('L\'image est trop grande. Maximum 5MB.');
         return;
       }
-      setPhotoFile(file);
-      // Convert to base64 for preview only
+
+      // Compress image using canvas
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData({ ...formData, profile_photo_url: reader.result });
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          const maxWidth = 800;
+          const maxHeight = 800;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > maxWidth) {
+            height = (maxWidth / width) * height;
+            width = maxWidth;
+          }
+          if (height > maxHeight) {
+            width = (maxHeight / height) * width;
+            height = maxHeight;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Compress to JPEG with quality 0.7
+          canvas.toBlob((blob) => {
+            if (blob) {
+              setPhotoFile(new File([blob], file.name, { type: 'image/jpeg' }));
+              // Preview
+              const previewReader = new FileReader();
+              previewReader.onloadend = () => {
+                setFormData({ ...formData, profile_photo_url: previewReader.result });
+              };
+              previewReader.readAsDataURL(blob);
+            }
+          }, 'image/jpeg', 0.7);
+        };
+        img.src = event.target.result;
       };
       reader.readAsDataURL(file);
     }
