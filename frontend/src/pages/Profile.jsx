@@ -151,15 +151,6 @@ export default function Profile() {
                 />
               </div>
             </div>
-            <div>
-              <label className="block text-xs text-capitune-text uppercase mb-2">Photo de profil</label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handlePhotoChange}
-                className="input-dark w-full"
-              />
-            </div>
             <div className="flex gap-3">
               <button type="submit" disabled={saving} className="btn-primary flex items-center gap-2">
                 <Save size={18} />
