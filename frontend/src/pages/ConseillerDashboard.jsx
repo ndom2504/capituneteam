@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
-import { Check, X, FileText, User, Calendar, Bell, Download } from 'lucide-react';
+import { Check, X, FileText, User, Calendar, Bell, Download, XCircle } from 'lucide-react';
 
 export default function ConseillerDashboard() {
   const { dbUser, getToken } = useAuth();
   const [dossiers, setDossiers] = useState([]);
+  const [notifications, setNotifications] = useState([]);
   const [selectedDossier, setSelectedDossier] = useState(null);
   const [refusalReason, setRefusalReason] = useState('');
   const [loading, setLoading] = useState(false);
@@ -25,7 +26,24 @@ export default function ConseillerDashboard() {
     }
   }
 
-  useEffect(() => { if (dbUser) fetchDossiers(); }, [dbUser]);
+  async function fetchNotifications() {
+    try {
+      const token = await getToken();
+      const res = await fetch('/api/messages', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) setNotifications(await res.json());
+    } catch (err) {
+      console.error('Error fetching notifications:', err);
+    }
+  }
+
+  useEffect(() => {
+    if (dbUser) {
+      fetchDossiers();
+      fetchNotifications();
+    }
+  }, [dbUser]);
 
   const handleAccept = async (dossierId) => {
     setLoading(true);
@@ -118,10 +136,10 @@ export default function ConseillerDashboard() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h2 className="text-2xl font-bold">Tableau de Bord Conseiller</h2>
-          {dossiers.length > 0 && (
+          {(dossiers.length > 0 || notifications.length > 0) && (
             <span className="flex items-center gap-1 px-3 py-1 bg-blue-600 rounded-full text-sm">
               <Bell size={16} />
-              {dossiers.length}
+              {dossiers.length + notifications.length}
             </span>
           )}
         </div>
@@ -129,6 +147,33 @@ export default function ConseillerDashboard() {
           {dossiers.length} dossier{dossiers.length > 1 ? 's' : ''} reçu{dossiers.length > 1 ? 's' : ''}
         </div>
       </div>
+
+      {notifications.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="text-lg font-semibold">Notifications</h3>
+          {notifications.map((notif) => (
+            <div key={notif.id} className="card-dark flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Bell size={20} className="text-blue-400" />
+                <div>
+                  <p className="font-medium">{notif.content}</p>
+                  <p className="text-xs text-capitune-text">
+                    {new Date(notif.created_at).toLocaleDateString('fr-FR')} à {new Date(notif.created_at).toLocaleTimeString('fr-FR')}
+                  </p>
+                </div>
+              </div>
+              {notif.dossier_id && (
+                <button
+                  onClick={() => fetchDossiers()}
+                  className="btn-outline px-3 py-1 text-sm"
+                >
+                  Rafraîchir
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
       {message && (
         <div className={`p-3 rounded ${message.includes('succès') || message === 'Dossier refusé' ? 'bg-green-900/50 text-green-300' : 'bg-red-900/50 text-red-300'}`}>
