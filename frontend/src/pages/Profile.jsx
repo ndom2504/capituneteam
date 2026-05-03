@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
-import { User, Camera, Save } from 'lucide-react';
+import { User, Save } from 'lucide-react';
 
 export default function Profile() {
   const { dbUser, logout, getToken } = useAuth();
@@ -10,7 +10,6 @@ export default function Profile() {
     last_name: '',
     profile_photo_url: '',
   });
-  const [photoFile, setPhotoFile] = useState(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -25,86 +24,9 @@ export default function Profile() {
   }, [dbUser]);
 
   const handlePhotoChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        setMessage('L\'image est trop grande. Maximum 5MB.');
-        return;
-      }
-
-      // Compress image using canvas
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          const ctx = canvas.getContext('2d');
-          const maxWidth = 800;
-          const maxHeight = 800;
-          let width = img.width;
-          let height = img.height;
-
-          if (width > maxWidth) {
-            height = (maxWidth / width) * height;
-            width = maxWidth;
-          }
-          if (height > maxHeight) {
-            width = (maxHeight / height) * width;
-            height = maxHeight;
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-          ctx.drawImage(img, 0, 0, width, height);
-
-          // Compress to JPEG with quality 0.7
-          canvas.toBlob((blob) => {
-            if (blob) {
-              setPhotoFile(new File([blob], file.name, { type: 'image/jpeg' }));
-              // Preview
-              const previewReader = new FileReader();
-              previewReader.onloadend = () => {
-                setFormData({ ...formData, profile_photo_url: previewReader.result });
-              };
-              previewReader.readAsDataURL(blob);
-            }
-          }, 'image/jpeg', 0.7);
-        };
-        img.src = event.target.result;
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handlePhotoUpload = async () => {
-    if (!photoFile) return;
-    setSaving(true);
-    try {
-      const token = await getToken();
-      const formData = new FormData();
-      formData.append('photo', photoFile);
-
-      const response = await fetch('/api/users/upload-photo', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setFormData({ ...formData, profile_photo_url: data.profile_photo_url });
-        setMessage('Photo mise à jour avec succès');
-      } else {
-        setMessage('Erreur lors de l\'upload de la photo');
-      }
-    } catch (err) {
-      setMessage('Erreur de connexion');
-    } finally {
-      setSaving(false);
-    }
+    // Photo upload temporarily disabled due to Vercel payload limits
+    // Will be implemented with external storage (Cloudinary/S3) later
+    setMessage('Upload de photo temporairement désactivé. À venir avec stockage externe.');
   };
 
   const handleSave = async (e) => {
@@ -113,16 +35,6 @@ export default function Profile() {
     setMessage('');
 
     try {
-      // Upload photo first if changed
-      if (photoFile) {
-        await handlePhotoUpload();
-        if (!message.includes('succès')) {
-          setSaving(false);
-          return;
-        }
-      }
-
-      // Update profile without photo URL
       const token = await getToken();
       const response = await fetch('/api/users/profile', {
         method: 'PUT',
@@ -140,7 +52,6 @@ export default function Profile() {
         const updatedUser = await response.json();
         setMessage('Profil mis à jour avec succès');
         setEditing(false);
-        setPhotoFile(null);
         // Reload user data
         window.location.reload();
       } else {
@@ -187,17 +98,6 @@ export default function Profile() {
               <div className="w-24 h-24 rounded-full bg-capitune-border flex items-center justify-center">
                 <User size={48} className="text-capitune-text" />
               </div>
-            )}
-            {editing && (
-              <label className="absolute bottom-0 right-0 bg-capitune-white rounded-full p-2 cursor-pointer hover:bg-gray-200">
-                <Camera size={16} className="text-capitune-black" />
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handlePhotoChange}
-                  className="hidden"
-                />
-              </label>
             )}
           </div>
           <div>
