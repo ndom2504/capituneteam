@@ -27,9 +27,9 @@ export default function Profile() {
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Validate file size (max 1MB for base64 compatibility)
-      if (file.size > 1000 * 1024) {
-        setMessage('L\'image est trop grande. Maximum 1MB.');
+      // Validate file size (max 10MB for base64 compatibility)
+      if (file.size > 10 * 1024 * 1024) {
+        setMessage('L\'image est trop grande. Maximum 10MB.');
         return;
       }
       setPhotoFile(file);
