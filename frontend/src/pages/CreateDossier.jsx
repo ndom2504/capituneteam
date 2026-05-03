@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { FileText, Send, ArrowLeft, Upload } from 'lucide-react';
 
@@ -23,6 +23,21 @@ export default function CreateDossier() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [dossierId, setDossierId] = useState(null);
+
+  useEffect(() => {
+    async function fetchConseillers() {
+      try {
+        const token = await getToken();
+        const res = await fetch('/api/users/conseillers', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) setConseillers(await res.json());
+      } catch (err) {
+        console.error('Error fetching conseillers:', err);
+      }
+    }
+    fetchConseillers();
+  }, [getToken]);
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -347,8 +362,11 @@ export default function CreateDossier() {
                 className="input-dark w-full"
               >
                 <option value="">Sélectionner un conseiller</option>
-                <option value="1">Conseiller 1</option>
-                <option value="2">Conseiller 2</option>
+                {conseillers.map((conseiller) => (
+                  <option key={conseiller.id} value={conseiller.id}>
+                    {conseiller.display_name || conseiller.email}
+                  </option>
+                ))}
               </select>
             </div>
             <button

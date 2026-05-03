@@ -76,14 +76,24 @@ router.get('/:id', verifyToken, loadUser, async (req, res) => {
 });
 
 // POST /api/dossiers/:id/envoyer - Send dossier to conseiller
-router.post('/:id/envoyer', verifyToken, requireRole(['client']), async (req, res) => {
+router.post('/:id/envoyer', verifyToken, requireRole(['client']), loadUser, async (req, res) => {
   try {
     const { conseiller_id } = req.body;
+    const client_id = req.user.dbUser.id;
+
     const result = await query(
       `UPDATE dossiers SET statut = 'envoye', conseiller_id = $1 WHERE id = $2 AND client_id = $3 RETURNING *`,
-      [conseiller_id, req.params.id, req.user.dbUser.id]
+      [conseiller_id, req.params.id, client_id]
     );
     if (!result.rows.length) return res.status(404).json({ error: 'Dossier not found' });
+
+    // Create notification message for conseiller
+    await query(
+      `INSERT INTO messages (dossier_id, sender_id, content, created_at)
+       VALUES ($1, $2, $3, NOW())`,
+      [req.params.id, client_id, 'Nouveau dossier reçu']
+    );
+
     res.json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });

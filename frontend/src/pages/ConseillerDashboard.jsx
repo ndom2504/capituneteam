@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
-import { Check, X, FileText, User, Calendar } from 'lucide-react';
+import { Check, X, FileText, User, Calendar, Bell, Download } from 'lucide-react';
 
 export default function ConseillerDashboard() {
   const { dbUser, getToken } = useAuth();
@@ -87,10 +87,44 @@ export default function ConseillerDashboard() {
     affaires: 'Affaires'
   };
 
+  const metierLabel = {
+    developpeur: 'Développeur',
+    ingenieur: 'Ingénieur',
+    medecin: 'Médecin',
+    infirmier: 'Infirmier',
+    enseignant: 'Enseignant',
+    comptable: 'Comptable',
+    avocat: 'Avocat',
+    gestionnaire: 'Gestionnaire',
+    artisan: 'Artisan',
+    commercial: 'Commercial',
+    autre: 'Autre'
+  };
+
+  const domaineEtudesLabel = {
+    informatique: 'Informatique',
+    ingenierie: 'Ingénierie',
+    sante: 'Santé',
+    business: 'Business',
+    droit: 'Droit',
+    education: 'Éducation',
+    arts: 'Arts',
+    sciences: 'Sciences',
+    autre: 'Autre'
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Tableau de Bord Conseiller</h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-2xl font-bold">Tableau de Bord Conseiller</h2>
+          {dossiers.length > 0 && (
+            <span className="flex items-center gap-1 px-3 py-1 bg-blue-600 rounded-full text-sm">
+              <Bell size={16} />
+              {dossiers.length}
+            </span>
+          )}
+        </div>
         <div className="text-capitune-text">
           {dossiers.length} dossier{dossiers.length > 1 ? 's' : ''} reçu{dossiers.length > 1 ? 's' : ''}
         </div>
@@ -140,7 +174,24 @@ export default function ConseillerDashboard() {
                       <div><span className="text-capitune-text">Nationalité:</span> {dossier.data.nationalite}</div>
                       <div><span className="text-capitune-text">Situation familiale:</span> {dossier.data.situation_familiale}</div>
                       <div><span className="text-capitune-text">Niveau d'études:</span> {dossier.data.niveau_etudes}</div>
+                      <div><span className="text-capitune-text">Domaine d'études:</span> {domaineEtudesLabel[dossier.data.domaine_etudes] || dossier.data.domaine_etudes}</div>
+                      <div><span className="text-capitune-text">Métier:</span> {metierLabel[dossier.data.metier] || dossier.data.metier}</div>
+                      <div><span className="text-capitune-text">Années d'expérience:</span> {dossier.data.annees_experience}</div>
                       <div><span className="text-capitune-text">Motivation:</span> {dossier.data.motivation}</div>
+                    </div>
+                  )}
+
+                  {dossier.file_url && (
+                    <div className="mt-3">
+                      <a
+                        href={dossier.file_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm"
+                      >
+                        <Download size={16} />
+                        Voir le CV
+                      </a>
                     </div>
                   )}
                 </div>
