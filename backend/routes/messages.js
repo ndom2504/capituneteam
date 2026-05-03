@@ -2,23 +2,9 @@ import { Router } from 'express';
 import { query } from '../config/db.js';
 import { verifyToken, loadUser } from '../middleware/auth.js';
 import multer from 'multer';
-import { mkdirSync } from 'fs';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const uploadDir = join(__dirname, '..', 'uploads');
-try { mkdirSync(uploadDir); } catch (e) {}
-
-const storage = multer.diskStorage({
-  destination: uploadDir,
-  filename: (req, file, cb) => {
-    const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}-${file.originalname}`;
-    cb(null, unique);
-  },
-});
+// Use memory storage for Vercel (read-only filesystem)
+const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 const router = Router();
@@ -50,7 +36,8 @@ router.post('/:dossierId', verifyToken, upload.single('file'), async (req, res) 
     const { content } = req.body;
     const dossierId = req.params.dossierId;
     const senderId = req.user.dbUser.id;
-    const fileUrl = req.file ? `/uploads/${req.file.filename}` : null;
+    // For memoryStorage, files are in req.file.buffer - store as base64 or use cloud storage
+    const fileUrl = req.file ? `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}` : null;
     const result = await query(
       `INSERT INTO messages (dossier_id, sender_id, content, file_url, created_at)
        VALUES ($1, $2, $3, $4, NOW()) RETURNING *`,
