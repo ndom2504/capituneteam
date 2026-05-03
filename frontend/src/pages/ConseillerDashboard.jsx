@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useNavigate } from 'react-router-dom';
-import { Check, X, FileText, User, Calendar, Bell, Download, XCircle, Eye } from 'lucide-react';
+import { Check, X, FileText, User, Calendar, Bell, Download, XCircle, Eye, UserCircle } from 'lucide-react';
 
 export default function ConseillerDashboard() {
   const { dbUser, getToken } = useAuth();
@@ -12,12 +12,28 @@ export default function ConseillerDashboard() {
   const [refusalReason, setRefusalReason] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [activeTab, setActiveTab] = useState('dashboard');
 
   async function fetchDossiers() {
     setLoading(true);
     try {
       const token = await getToken();
       const res = await fetch('/api/dossiers/conseiller/dossiers', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) setDossiers(await res.json());
+    } catch (err) {
+      setMessage('Erreur de chargement des dossiers');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function fetchAllDossiers() {
+    setLoading(true);
+    try {
+      const token = await getToken();
+      const res = await fetch('/api/dossiers/conseiller/dossiers/all', {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) setDossiers(await res.json());
@@ -42,10 +58,14 @@ export default function ConseillerDashboard() {
 
   useEffect(() => {
     if (dbUser) {
-      fetchDossiers();
+      if (activeTab === 'dashboard') {
+        fetchDossiers();
+      } else if (activeTab === 'dossiers') {
+        fetchAllDossiers();
+      }
       fetchNotifications();
     }
-  }, [dbUser]);
+  }, [dbUser, activeTab]);
 
   const handleAccept = async (dossierId) => {
     setLoading(true);
@@ -146,8 +166,23 @@ export default function ConseillerDashboard() {
           )}
         </div>
         <div className="text-capitune-text">
-          {dossiers.length} dossier{dossiers.length > 1 ? 's' : ''} reçu{dossiers.length > 1 ? 's' : ''}
+          {activeTab === 'dashboard' ? `${dossiers.length} dossier${dossiers.length > 1 ? 's' : ''} reçu${dossiers.length > 1 ? 's' : ''}` : `${dossiers.length} dossier${dossiers.length > 1 ? 's' : ''} au total`}
         </div>
+      </div>
+
+      <div className="flex gap-2 border-b border-capitune-border">
+        <button
+          onClick={() => setActiveTab('dashboard')}
+          className={`px-4 py-2 pb-3 font-medium transition-colors ${activeTab === 'dashboard' ? 'text-capitune-white border-b-2 border-blue-500' : 'text-capitune-text hover:text-capitune-white'}`}
+        >
+          Dashboard
+        </button>
+        <button
+          onClick={() => setActiveTab('dossiers')}
+          className={`px-4 py-2 pb-3 font-medium transition-colors ${activeTab === 'dossiers' ? 'text-capitune-white border-b-2 border-blue-500' : 'text-capitune-text hover:text-capitune-white'}`}
+        >
+          Dossiers
+        </button>
       </div>
 
       {notifications.length > 0 && (
@@ -269,6 +304,20 @@ export default function ConseillerDashboard() {
                     <X size={20} />
                   </button>
                 </div>
+
+                {dossier.profile_photo_url && (
+                  <div className="mt-3 pt-3 border-t border-capitune-border flex items-center gap-3">
+                    <img
+                      src={dossier.profile_photo_url}
+                      alt="Photo de profil"
+                      className="w-12 h-12 rounded-full object-cover border-2 border-capitune-border"
+                    />
+                    <div className="text-sm">
+                      <div className="text-capitune-text">Photo de profil</div>
+                      <div className="text-capitune-white">{dossier.first_name} {dossier.last_name}</div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ))}

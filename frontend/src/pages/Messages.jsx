@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
-import { Send, Paperclip } from 'lucide-react';
+import { Send, Paperclip, FileText } from 'lucide-react';
 
 export default function Messages() {
   const { dossierId } = useParams();
@@ -11,6 +11,19 @@ export default function Messages() {
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
   const [file, setFile] = useState(null);
+
+  const programmeLabel = {
+    entree_express: 'Entrée Express',
+    permis_etude: 'Permis d\'Études',
+    affaires: 'Affaires'
+  };
+
+  const statutLabel = {
+    brouillon: 'Brouillon',
+    envoye: 'Envoyé',
+    accepte: 'Accepté',
+    refuse: 'Refusé'
+  };
 
   async function fetchDossiers() {
     const token = await getToken();
@@ -44,27 +57,29 @@ export default function Messages() {
     fetchMessages(selected);
   }
 
-  if (!dossierId && dossiers.length > 0 && !selected) {
-    // show dossier list to pick
-  }
-
   return (
     <div className="space-y-4 h-[calc(100vh-8rem)] flex flex-col">
       <h2 className="text-2xl font-bold">Messagerie</h2>
       {!selected ? (
-        <div className="space-y-2">
-          <p className="text-capitune-text mb-2">Sélectionner un dossier :</p>
-          {dossiers.map(d => (
-            <button key={d.id} onClick={() => setSelected(d.id)} className="card-dark w-full text-left hover:border-capitune-white transition">
-              <p className="font-semibold">{d.title}</p>
-              <p className="text-sm text-capitune-text capitalize">{d.status}</p>
-            </button>
-          ))}
-          {dossiers.length === 0 && <p className="text-capitune-text">Aucun dossier.</p>}
+        <div className="space-y-3">
+          <label className="block text-sm font-semibold text-capitune-white mb-2">Sélectionner un dossier :</label>
+          <div className="space-y-2">
+            {dossiers.map(d => (
+              <button key={d.id} onClick={() => setSelected(d.id)} className="card-dark w-full text-left hover:border-blue-500 transition-all p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <FileText size={16} className="text-blue-400" />
+                  <span className="font-semibold text-capitune-white">Dossier #{d.id}</span>
+                </div>
+                <p className="text-sm text-capitune-white">{programmeLabel[d.programme] || d.programme}</p>
+                <p className="text-xs text-capitune-text mt-1">{statutLabel[d.statut] || d.statut}</p>
+              </button>
+            ))}
+            {dossiers.length === 0 && <p className="text-capitune-text text-center py-4">Aucun dossier disponible.</p>}
+          </div>
         </div>
       ) : (
         <>
-          <button onClick={() => setSelected(null)} className="text-capitune-text hover:text-capitune-white text-sm w-fit">
+          <button onClick={() => setSelected(null)} className="text-capitune-text hover:text-capitune-white text-sm w-fit flex items-center gap-1">
             ← Changer de dossier
           </button>
           <div className="flex-1 overflow-y-auto space-y-3 bg-capitune-dark rounded-xl p-4 border border-capitune-border">
@@ -74,7 +89,7 @@ export default function Messages() {
                   <p className="text-xs opacity-70 mb-1">{m.sender_name}</p>
                   <p>{m.content}</p>
                   {m.file_url && (
-                    <a href={`http://localhost:3001${m.file_url}`} target="_blank" rel="noreferrer" className="underline text-xs block mt-1">
+                    <a href={m.file_url} target="_blank" rel="noreferrer" className="underline text-xs block mt-1">
                       📎 Fichier
                     </a>
                   )}
