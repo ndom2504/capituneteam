@@ -48,6 +48,9 @@ router.get('/', verifyToken, loadUser, async (req, res) => {
 
 router.get('/:dossierId', verifyToken, loadUser, async (req, res) => {
   try {
+    if (!req.user.dbUser) {
+      return res.status(404).json({ error: 'User not found in database' });
+    }
     const dossierResult = await query('SELECT client_id, conseiller_id FROM dossiers WHERE id = $1', [req.params.dossierId]);
     if (!dossierResult.rows.length) return res.status(404).json({ error: 'Dossier not found' });
     const dossier = dossierResult.rows[0];
@@ -55,8 +58,8 @@ router.get('/:dossierId', verifyToken, loadUser, async (req, res) => {
     if (req.user.role === 'client' && dossier.client_id !== uid) {
       return res.status(403).json({ error: 'Forbidden' });
     }
-    if (req.user.role === 'conseiller' && dossier.conseiller_id !== uid && dossier.conseiller_id !== null) {
-      // Allow if conseiller is not assigned yet and they want to view
+    if (req.user.role === 'conseiller' && dossier.conseiller_id !== uid) {
+      return res.status(403).json({ error: 'Forbidden' });
     }
     const result = await query(
       'SELECT m.*, u.display_name as sender_name FROM messages m JOIN users u ON m.sender_id = u.id WHERE m.dossier_id = $1 ORDER BY m.created_at ASC',
