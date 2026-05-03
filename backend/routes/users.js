@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { query } from '../config/db.js';
 import { verifyToken, requireRole, loadUser } from '../middleware/auth.js';
 import multer from 'multer';
+import cloudinary from '../config/cloudinary.js';
 
 // Use memory storage for file uploads
 const upload = multer({ storage: multer.memoryStorage() });
@@ -49,15 +50,37 @@ router.post('/upload-photo', verifyToken, loadUser, upload.single('photo'), asyn
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
+
     const userId = req.user.dbUser.id;
-    const fileUrl = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
-    const result = await query(
+
+    // Upload to Cloudinary
+    const result = await new Promise((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
+        {
+          folder: 'capitune/profiles',
+          resource_type: 'image',
+          transformation: [
+            { width: 400, height: 400, crop: 'fill', gravity: 'face' },
+            { quality: 'auto' },
+          ],
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      ).end(req.file.buffer);
+    });
+
+    // Update user with Cloudinary URL
+    const userResult = await query(
       'UPDATE users SET profile_photo_url = $1 WHERE id = $2 RETURNING *',
-      [fileUrl, userId]
+      [result.secure_url, userId]
     );
-    res.json({ profile_photo_url: fileUrl, user: result.rows[0] });
+
+    res.json({ profile_photo_url: result.secure_url, user: userResult.rows[0] });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Cloudinary upload error:', err);
+    res.status(500).json({ error: 'Erreur lors de l\'upload de la photo' });
   }
 });
 

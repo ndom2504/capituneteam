@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
-import { User, Save } from 'lucide-react';
+import { User, Camera, Save } from 'lucide-react';
 
 export default function Profile() {
   const { dbUser, logout, getToken } = useAuth();
@@ -10,6 +10,7 @@ export default function Profile() {
     last_name: '',
     profile_photo_url: '',
   });
+  const [photoFile, setPhotoFile] = useState(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -24,9 +25,51 @@ export default function Profile() {
   }, [dbUser]);
 
   const handlePhotoChange = (e) => {
-    // Photo upload temporarily disabled due to Vercel payload limits
-    // Will be implemented with external storage (Cloudinary/S3) later
-    setMessage('Upload de photo temporairement désactivé. À venir avec stockage externe.');
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setMessage('L\'image est trop grande. Maximum 5MB.');
+        return;
+      }
+      setPhotoFile(file);
+      // Preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData({ ...formData, profile_photo_url: reader.result });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handlePhotoUpload = async () => {
+    if (!photoFile) return;
+    setSaving(true);
+    try {
+      const token = await getToken();
+      const formData = new FormData();
+      formData.append('photo', photoFile);
+
+      const response = await fetch('/api/users/upload-photo', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setFormData({ ...formData, profile_photo_url: data.profile_photo_url });
+        setMessage('Photo mise à jour avec succès');
+      } else {
+        setMessage('Erreur lors de l\'upload de la photo');
+      }
+    } catch (err) {
+      setMessage('Erreur de connexion');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleSave = async (e) => {
@@ -35,6 +78,16 @@ export default function Profile() {
     setMessage('');
 
     try {
+      // Upload photo first if changed
+      if (photoFile) {
+        await handlePhotoUpload();
+        if (!message.includes('succès')) {
+          setSaving(false);
+          return;
+        }
+      }
+
+      // Update profile without photo URL
       const token = await getToken();
       const response = await fetch('/api/users/profile', {
         method: 'PUT',
@@ -52,6 +105,7 @@ export default function Profile() {
         const updatedUser = await response.json();
         setMessage('Profil mis à jour avec succès');
         setEditing(false);
+        setPhotoFile(null);
         // Reload user data
         window.location.reload();
       } else {
@@ -98,6 +152,17 @@ export default function Profile() {
               <div className="w-24 h-24 rounded-full bg-capitune-border flex items-center justify-center">
                 <User size={48} className="text-capitune-text" />
               </div>
+            )}
+            {editing && (
+              <label className="absolute bottom-0 right-0 bg-capitune-white rounded-full p-2 cursor-pointer hover:bg-gray-200">
+                <Camera size={16} className="text-capitune-black" />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoChange}
+                  className="hidden"
+                />
+              </label>
             )}
           </div>
           <div>
