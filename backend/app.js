@@ -25,7 +25,11 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/messages', messageRoutes);
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok' });
+  res.json({ status: 'ok', service: 'capitune-backend' });
+});
+
+app.get('/', (req, res) => {
+  res.json({ status: 'ok', service: 'capitune-backend', message: 'API is running' });
 });
 
 export default app;
