@@ -8,6 +8,9 @@ const router = Router();
 
 router.post('/create-checkout-session', verifyToken, loadUser, async (req, res) => {
   try {
+    if (!req.user.dbUser) {
+      return res.status(404).json({ error: 'User not found in database' });
+    }
     const { ticket_id } = req.body;
     const ticketResult = await query('SELECT * FROM tickets WHERE id = $1', [ticket_id]);
     if (!ticketResult.rows.length) return res.status(404).json({ error: 'Ticket not found' });
@@ -63,6 +66,9 @@ router.post('/webhook', async (req, res) => {
 
 router.get('/', verifyToken, loadUser, async (req, res) => {
   try {
+    if (!req.user.dbUser) {
+      return res.status(404).json({ error: 'User not found in database' });
+    }
     let sql = 'SELECT * FROM payments';
     let params = [];
     if (req.user.role === 'client') {

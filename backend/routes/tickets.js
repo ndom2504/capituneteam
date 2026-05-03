@@ -40,8 +40,11 @@ router.get('/:id', verifyToken, loadUser, async (req, res) => {
   }
 });
 
-router.post('/', verifyToken, requireRole(['conseiller', 'admin']), async (req, res) => {
+router.post('/', verifyToken, requireRole(['conseiller', 'admin']), loadUser, async (req, res) => {
   try {
+    if (!req.user.dbUser) {
+      return res.status(404).json({ error: 'User not found in database' });
+    }
     const { dossier_id, service_name, price, deadline } = req.body;
     const conseiller_id = req.user.dbUser.id;
     const result = await query(
