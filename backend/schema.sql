@@ -19,10 +19,10 @@ CREATE TABLE IF NOT EXISTS dossiers (
   id SERIAL PRIMARY KEY,
   client_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
   conseiller_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
-  type VARCHAR(50) CHECK (type IN ('express_entry', 'study_permit', 'business_opportunity')) NOT NULL,
-  title VARCHAR(255) NOT NULL,
-  description TEXT,
-  status VARCHAR(20) CHECK (status IN ('pending', 'accepted', 'rejected', 'in_progress', 'completed')) DEFAULT 'pending',
+  programme VARCHAR(50) CHECK (programme IN ('entree_express', 'permis_etude', 'affaires')) NOT NULL,
+  statut VARCHAR(20) CHECK (statut IN ('brouillon', 'envoye', 'accepte', 'refuse')) DEFAULT 'brouillon',
+  data JSONB,
+  refusal_reason TEXT,
   created_at TIMESTAMP DEFAULT NOW()
 );
 
