@@ -27,18 +27,48 @@ export default function Profile() {
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Validate file size (max 2MB to stay within Vercel's 4.5MB payload limit after base64 encoding)
-      if (file.size > 2 * 1024 * 1024) {
-        setMessage('L\'image est trop grande. Maximum 2MB.');
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setMessage('L\'image est trop grande. Maximum 5MB.');
         return;
       }
       setPhotoFile(file);
-      // Convert to base64 for preview
+      // Convert to base64 for preview only
       const reader = new FileReader();
       reader.onloadend = () => {
         setFormData({ ...formData, profile_photo_url: reader.result });
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handlePhotoUpload = async () => {
+    if (!photoFile) return;
+    setSaving(true);
+    try {
+      const token = await getToken();
+      const formData = new FormData();
+      formData.append('photo', photoFile);
+
+      const response = await fetch('/api/users/upload-photo', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setFormData({ ...formData, profile_photo_url: data.profile_photo_url });
+        setMessage('Photo mise à jour avec succès');
+      } else {
+        setMessage('Erreur lors de l\'upload de la photo');
+      }
+    } catch (err) {
+      setMessage('Erreur de connexion');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -48,6 +78,16 @@ export default function Profile() {
     setMessage('');
 
     try {
+      // Upload photo first if changed
+      if (photoFile) {
+        await handlePhotoUpload();
+        if (!message.includes('succès')) {
+          setSaving(false);
+          return;
+        }
+      }
+
+      // Update profile without photo URL
       const token = await getToken();
       const response = await fetch('/api/users/profile', {
         method: 'PUT',
@@ -55,13 +95,17 @@ export default function Profile() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          first_name: formData.first_name,
+          last_name: formData.last_name,
+        }),
       });
 
       if (response.ok) {
         const updatedUser = await response.json();
         setMessage('Profil mis à jour avec succès');
         setEditing(false);
+        setPhotoFile(null);
         // Reload user data
         window.location.reload();
       } else {

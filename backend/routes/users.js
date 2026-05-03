@@ -1,6 +1,10 @@
 import { Router } from 'express';
 import { query } from '../config/db.js';
 import { verifyToken, requireRole, loadUser } from '../middleware/auth.js';
+import multer from 'multer';
+
+// Use memory storage for file uploads
+const upload = multer({ storage: multer.memoryStorage() });
 
 const router = Router();
 
@@ -27,7 +31,7 @@ router.put('/profile', verifyToken, loadUser, async (req, res) => {
     const { first_name, last_name, profile_photo_url } = req.body;
     const userId = req.user.dbUser.id;
     const result = await query(
-      `UPDATE users 
+      `UPDATE users
        SET first_name = COALESCE($1, first_name),
            last_name = COALESCE($2, last_name),
            profile_photo_url = COALESCE($3, profile_photo_url)
@@ -35,6 +39,23 @@ router.put('/profile', verifyToken, loadUser, async (req, res) => {
       [first_name, last_name, profile_photo_url, userId]
     );
     res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/upload-photo', verifyToken, loadUser, upload.single('photo'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+    const userId = req.user.dbUser.id;
+    const fileUrl = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+    const result = await query(
+      'UPDATE users SET profile_photo_url = $1 WHERE id = $2 RETURNING *',
+      [fileUrl, userId]
+    );
+    res.json({ profile_photo_url: fileUrl, user: result.rows[0] });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
