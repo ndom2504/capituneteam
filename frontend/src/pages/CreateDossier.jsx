@@ -1,0 +1,281 @@
+import { useState } from 'react';
+import { useAuth } from '../context/AuthContext.jsx';
+import { FileText, Send, ArrowLeft } from 'lucide-react';
+
+export default function CreateDossier() {
+  const { dbUser, getToken } = useAuth();
+  const [programme, setProgramme] = useState('entree_express');
+  const [formData, setFormData] = useState({
+    nom: '',
+    prenom: '',
+    date_naissance: '',
+    nationalite: '',
+    situation_familiale: '',
+    niveau_etudes: '',
+    experience_travail: '',
+    motivation: '',
+  });
+  const [conseillers, setConseillers] = useState([]);
+  const [selectedConseiller, setSelectedConseiller] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState('');
+  const [dossierId, setDossierId] = useState(null);
+
+  const handleInputChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleCreateDossier = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    setMessage('');
+
+    try {
+      const token = await getToken();
+      const response = await fetch('/api/dossiers', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          programme,
+          data: formData,
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setDossierId(result.id);
+        setMessage('Dossier créé avec succès. Sélectionnez un conseiller pour l\'envoyer.');
+      } else {
+        setMessage('Erreur lors de la création du dossier');
+      }
+    } catch (err) {
+      setMessage('Erreur de connexion');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSendDossier = async (e) => {
+    e.preventDefault();
+    if (!dossierId || !selectedConseiller) {
+      setMessage('Veuillez d\'abord créer le dossier et sélectionner un conseiller');
+      return;
+    }
+
+    setSaving(true);
+    setMessage('');
+
+    try {
+      const token = await getToken();
+      const response = await fetch(`/api/dossiers/${dossierId}/envoyer`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ conseiller_id: selectedConseiller }),
+      });
+
+      if (response.ok) {
+        setMessage('Dossier envoyé au conseiller avec succès');
+        setTimeout(() => {
+          window.location.href = '/dossiers';
+        }, 2000);
+      } else {
+        setMessage('Erreur lors de l\'envoi du dossier');
+      }
+    } catch (err) {
+      setMessage('Erreur de connexion');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const programmeOptions = [
+    { value: 'entree_express', label: 'Entrée Express' },
+    { value: 'permis_etude', label: 'Permis d\'Études' },
+    { value: 'affaires', label: 'Affaires' },
+  ];
+
+  return (
+    <div className="space-y-6 max-w-3xl">
+      <div className="flex items-center gap-4">
+        <button onClick={() => window.history.back()} className="btn-outline p-2">
+          <ArrowLeft size={20} />
+        </button>
+        <h2 className="text-2xl font-bold">Créer un Dossier</h2>
+      </div>
+
+      {message && (
+        <div className={`p-3 rounded ${message.includes('succès') ? 'bg-green-900/50 text-green-300' : 'bg-red-900/50 text-red-300'}`}>
+          {message}
+        </div>
+      )}
+
+      <div className="card-dark space-y-6">
+        <div>
+          <label className="block text-xs text-capitune-text uppercase mb-2">Programme d'immigration</label>
+          <select
+            value={programme}
+            onChange={(e) => setProgramme(e.target.value)}
+            className="input-dark w-full"
+            disabled={dossierId}
+          >
+            {programmeOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <form onSubmit={handleCreateDossier} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs text-capitune-text uppercase mb-2">Nom</label>
+              <input
+                type="text"
+                name="nom"
+                value={formData.nom}
+                onChange={handleInputChange}
+                className="input-dark w-full"
+                disabled={dossierId}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-capitune-text uppercase mb-2">Prénom</label>
+              <input
+                type="text"
+                name="prenom"
+                value={formData.prenom}
+                onChange={handleInputChange}
+                className="input-dark w-full"
+                disabled={dossierId}
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs text-capitune-text uppercase mb-2">Date de naissance</label>
+            <input
+              type="date"
+              name="date_naissance"
+              value={formData.date_naissance}
+              onChange={handleInputChange}
+              className="input-dark w-full"
+              disabled={dossierId}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs text-capitune-text uppercase mb-2">Nationalité</label>
+            <input
+              type="text"
+              name="nationalite"
+              value={formData.nationalite}
+              onChange={handleInputChange}
+              className="input-dark w-full"
+              disabled={dossierId}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs text-capitune-text uppercase mb-2">Situation familiale</label>
+            <select
+              name="situation_familiale"
+              value={formData.situation_familiale}
+              onChange={handleInputChange}
+              className="input-dark w-full"
+              disabled={dossierId}
+              required
+            >
+              <option value="">Sélectionner</option>
+              <option value="celibataire">Célibataire</option>
+              <option value="marie">Marié(e)</option>
+              <option value="divorce">Divorcé(e)</option>
+              <option value="veuf">Veuf/Veuve</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs text-capitune-text uppercase mb-2">Niveau d'études</label>
+            <input
+              type="text"
+              name="niveau_etudes"
+              value={formData.niveau_etudes}
+              onChange={handleInputChange}
+              className="input-dark w-full"
+              disabled={dossierId}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs text-capitune-text uppercase mb-2">Expérience de travail</label>
+            <textarea
+              name="experience_travail"
+              value={formData.experience_travail}
+              onChange={handleInputChange}
+              className="input-dark w-full"
+              rows={3}
+              disabled={dossierId}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs text-capitune-text uppercase mb-2">Motivation</label>
+            <textarea
+              name="motivation"
+              value={formData.motivation}
+              onChange={handleInputChange}
+              className="input-dark w-full"
+              rows={4}
+              disabled={dossierId}
+              required
+            />
+          </div>
+
+          {!dossierId && (
+            <button type="submit" disabled={saving} className="btn-primary w-full flex items-center justify-center gap-2">
+              <FileText size={18} />
+              {saving ? 'Création...' : 'Créer le Dossier'}
+            </button>
+          )}
+        </form>
+
+        {dossierId && (
+          <div className="border-t border-capitune-border pt-4 space-y-4">
+            <div>
+              <label className="block text-xs text-capitune-text uppercase mb-2">Sélectionner un conseiller</label>
+              <select
+                value={selectedConseiller}
+                onChange={(e) => setSelectedConseiller(e.target.value)}
+                className="input-dark w-full"
+              >
+                <option value="">Sélectionner un conseiller</option>
+                <option value="1">Conseiller 1</option>
+                <option value="2">Conseiller 2</option>
+              </select>
+            </div>
+            <button
+              onClick={handleSendDossier}
+              disabled={saving || !selectedConseiller}
+              className="btn-primary w-full flex items-center justify-center gap-2"
+            >
+              <Send size={18} />
+              {saving ? 'Envoi...' : 'Envoyer au Conseiller'}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

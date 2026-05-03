@@ -6,10 +6,12 @@ import About from './pages/About.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Dossiers from './pages/Dossiers.jsx';
 import DossierDetail from './pages/DossierDetail.jsx';
+import CreateDossier from './pages/CreateDossier.jsx';
 import Tickets from './pages/Tickets.jsx';
 import TicketDetail from './pages/TicketDetail.jsx';
 import Messages from './pages/Messages.jsx';
 import Profile from './pages/Profile.jsx';
+import ConseillerDashboard from './pages/ConseillerDashboard.jsx';
 
 function ProtectedRoute({ children }) {
   const { firebaseUser, loading } = useAuth();
@@ -25,7 +27,9 @@ function AppRoutes() {
       <Route path="/about" element={<About />} />
       <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/dossiers" element={<ProtectedRoute><Dossiers /></ProtectedRoute>} />
+      <Route path="/dossiers/create" element={<ProtectedRoute><CreateDossier /></ProtectedRoute>} />
       <Route path="/dossiers/:id" element={<ProtectedRoute><DossierDetail /></ProtectedRoute>} />
+      <Route path="/conseiller" element={<ProtectedRoute><ConseillerDashboard /></ProtectedRoute>} />
       <Route path="/tickets" element={<ProtectedRoute><Tickets /></ProtectedRoute>} />
       <Route path="/tickets/:id" element={<ProtectedRoute><TicketDetail /></ProtectedRoute>} />
       <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />

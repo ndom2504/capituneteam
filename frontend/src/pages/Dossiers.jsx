@@ -1,13 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { Link } from 'react-router-dom';
-import { Plus, ArrowRight } from 'lucide-react';
+import { Plus, ArrowRight, FileText } from 'lucide-react';
 
 export default function Dossiers() {
   const { dbUser, getToken } = useAuth();
   const [dossiers, setDossiers] = useState([]);
-  const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ type: 'express_entry', title: '', description: '' });
 
   async function fetchDossiers() {
     const token = await getToken();
@@ -17,54 +15,71 @@ export default function Dossiers() {
 
   useEffect(() => { if (dbUser) fetchDossiers(); }, [dbUser]);
 
-  async function handleCreate(e) {
-    e.preventDefault();
-    const token = await getToken();
-    await fetch('/api/dossiers', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify(form),
-    });
-    setShowForm(false);
-    setForm({ type: 'express_entry', title: '', description: '' });
-    fetchDossiers();
-  }
+  const programmeLabel = {
+    entree_express: 'Entrée Express',
+    permis_etude: 'Permis d\'Études',
+    affaires: 'Affaires'
+  };
 
-  const typeLabel = { express_entry: 'Entrée Express', study_permit: 'Permis d\'étude', business_opportunity: 'Opportunités d\'affaires' };
+  const statutLabel = {
+    brouillon: 'Brouillon',
+    envoye: 'Envoyé',
+    accepte: 'Accepté',
+    refuse: 'Refusé'
+  };
+
+  const statutColor = {
+    brouillon: 'bg-gray-600',
+    envoye: 'bg-blue-600',
+    accepte: 'bg-green-600',
+    refuse: 'bg-red-600'
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Dossiers</h2>
+        <h2 className="text-2xl font-bold">Mes Dossiers</h2>
         {dbUser?.role === 'client' && (
-          <button onClick={() => setShowForm(!showForm)} className="btn-primary flex items-center gap-2">
-            <Plus size={18} /> Nouveau
-          </button>
+          <Link to="/dossiers/create" className="btn-primary flex items-center gap-2">
+            <Plus size={18} /> Nouveau Dossier
+          </Link>
         )}
       </div>
-      {showForm && (
-        <form onSubmit={handleCreate} className="card-dark space-y-3">
-          <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })} className="input-dark w-full">
-            <option value="express_entry">Entrée Express</option>
-            <option value="study_permit">Permis d'étude</option>
-            <option value="business_opportunity">Opportunités d'affaires</option>
-          </select>
-          <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="Titre" className="input-dark w-full" required />
-          <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Description" className="input-dark w-full" rows={3} />
-          <button type="submit" className="btn-primary">Créer</button>
-        </form>
-      )}
+
       <div className="space-y-3">
         {dossiers.map(d => (
           <Link key={d.id} to={`/dossiers/${d.id}`} className="card-dark flex items-center justify-between hover:border-capitune-white transition">
-            <div>
-              <p className="font-semibold">{d.title}</p>
-              <p className="text-sm text-capitune-text">{typeLabel[d.type]} • <span className="capitalize">{d.status}</span></p>
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-capitune-border rounded-lg">
+                <FileText size={24} className="text-capitune-text" />
+              </div>
+              <div>
+                <p className="font-semibold">{programmeLabel[d.programme]}</p>
+                <p className="text-sm text-capitune-text">
+                  {new Date(d.created_at).toLocaleDateString('fr-FR')} •
+                  <span className={`ml-2 px-2 py-1 text-xs rounded-full ${statutColor[d.statut]}`}>
+                    {statutLabel[d.statut]}
+                  </span>
+                </p>
+                {d.refusal_reason && (
+                  <p className="text-sm text-red-400 mt-1">Refusé: {d.refusal_reason}</p>
+                )}
+              </div>
             </div>
             <ArrowRight size={18} className="text-capitune-text" />
           </Link>
         ))}
-        {dossiers.length === 0 && <p className="text-capitune-text">Aucun dossier.</p>}
+        {dossiers.length === 0 && (
+          <div className="card-dark text-center py-8">
+            <FileText size={48} className="text-capitune-text mx-auto mb-4" />
+            <p className="text-capitune-text">Aucun dossier pour le moment</p>
+            {dbUser?.role === 'client' && (
+              <Link to="/dossiers/create" className="btn-primary inline-flex items-center gap-2 mt-4">
+                <Plus size={18} /> Créer un Dossier
+              </Link>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

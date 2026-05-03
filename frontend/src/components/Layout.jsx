@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
-import { LayoutDashboard, FolderOpen, Ticket, MessageSquare, User, LogOut, Menu, X, Info } from 'lucide-react';
+import { LayoutDashboard, FolderOpen, Ticket, MessageSquare, User, LogOut, Menu, X, Info, Briefcase } from 'lucide-react';
 import { useState } from 'react';
 
 const navItems = [
@@ -9,6 +9,12 @@ const navItems = [
   { path: '/tickets', label: 'Tickets', icon: Ticket },
   { path: '/messages', label: 'Messages', icon: MessageSquare },
   { path: '/about', label: 'À propos', icon: Info },
+  { path: '/profile', label: 'Profil', icon: User },
+];
+
+const conseillerNavItems = [
+  { path: '/conseiller', label: 'Tableau de bord', icon: Briefcase },
+  { path: '/messages', label: 'Messages', icon: MessageSquare },
   { path: '/profile', label: 'Profil', icon: User },
 ];
 
@@ -23,6 +29,8 @@ export default function Layout({ children }) {
     navigate('/login');
   };
 
+  const currentNavItems = dbUser?.role === 'conseiller' ? conseillerNavItems : navItems;
+
   return (
     <div className="min-h-screen flex">
       {/* Sidebar desktop */}
@@ -31,7 +39,7 @@ export default function Layout({ children }) {
           <h1 className="text-2xl font-bold text-capitune-white tracking-tight">CAPITUNE</h1>
         </div>
         <nav className="flex-1 px-3 space-y-1">
-          {navItems.map((item) => {
+          {currentNavItems.map((item) => {
             const Icon = item.icon;
             const active = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
             return (
@@ -72,7 +80,7 @@ export default function Layout({ children }) {
       {mobileOpen && (
         <div className="md:hidden fixed inset-0 z-40 bg-capitune-black pt-14">
           <nav className="px-4 py-4 space-y-2">
-            {navItems.map((item) => {
+            {currentNavItems.map((item) => {
               const Icon = item.icon;
               const active = location.pathname === item.path;
               return (
