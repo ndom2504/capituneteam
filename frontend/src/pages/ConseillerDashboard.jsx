@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
-import { Check, X, FileText, User, Calendar, Bell, Download, XCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Check, X, FileText, User, Calendar, Bell, Download, XCircle, Eye } from 'lucide-react';
 
 export default function ConseillerDashboard() {
   const { dbUser, getToken } = useAuth();
+  const navigate = useNavigate();
   const [dossiers, setDossiers] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [selectedDossier, setSelectedDossier] = useState(null);
@@ -242,6 +244,14 @@ export default function ConseillerDashboard() {
                 </div>
 
                 <div className="flex gap-2">
+                  <button
+                    onClick={() => navigate(`/dossiers/${dossier.id}`)}
+                    disabled={loading}
+                    className="btn-outline p-2"
+                    title="Voir détails"
+                  >
+                    <Eye size={20} />
+                  </button>
                   <button
                     onClick={() => handleAccept(dossier.id)}
                     disabled={loading}
