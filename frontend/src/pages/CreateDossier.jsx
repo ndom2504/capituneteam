@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useNavigate, useParams } from 'react-router-dom';
 import { FileText, Send, ArrowLeft, Upload } from 'lucide-react';
 
 export default function CreateDossier() {
   const { dbUser, getToken } = useAuth();
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const isEditing = !!id;
   const [programme, setProgramme] = useState('entree_express');
   const [formData, setFormData] = useState({
     nom: '',
@@ -22,9 +26,8 @@ export default function CreateDossier() {
   const [selectedConseiller, setSelectedConseiller] = useState('');
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
-  const [dossierId, setDossierId] = useState(null);
-
-  console.log('CreateDossier component mounted');
+  const [loading, setLoading] = useState(false);
+  const [newDossierId, setNewDossierId] = useState(null);
 
   useEffect(() => {
     async function fetchConseillers() {
@@ -46,6 +49,30 @@ export default function CreateDossier() {
     }
     fetchConseillers();
   }, [getToken]);
+
+  useEffect(() => {
+    async function fetchDossier() {
+      if (!isEditing) return;
+      setLoading(true);
+      try {
+        const token = await getToken();
+        const res = await fetch(`/api/dossiers/${id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const dossier = await res.json();
+          setProgramme(dossier.programme);
+          setFormData(dossier.data);
+          setSelectedConseiller(dossier.conseiller_id || '');
+        }
+      } catch (err) {
+        setMessage('Erreur lors du chargement du dossier');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchDossier();
+  }, [isEditing, id, getToken]);
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -76,8 +103,11 @@ export default function CreateDossier() {
         formDataToSend.append('file', file);
       }
 
-      const response = await fetch('/api/dossiers', {
-        method: 'POST',
+      const url = isEditing ? `/api/dossiers/${id}` : '/api/dossiers';
+      const method = isEditing ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -86,10 +116,14 @@ export default function CreateDossier() {
 
       if (response.ok) {
         const result = await response.json();
-        setDossierId(result.id);
-        setMessage('Dossier créé avec succès. Sélectionnez un conseiller pour l\'envoyer.');
+        if (isEditing) {
+          setMessage('Dossier mis à jour avec succès');
+        } else {
+          setNewDossierId(result.id);
+          setMessage('Dossier créé avec succès. Sélectionnez un conseiller pour l\'envoyer.');
+        }
       } else {
-        setMessage('Erreur lors de la création du dossier');
+        setMessage(isEditing ? 'Erreur lors de la mise à jour du dossier' : 'Erreur lors de la création du dossier');
       }
     } catch (err) {
       setMessage('Erreur de connexion');
@@ -100,7 +134,7 @@ export default function CreateDossier() {
 
   const handleSendDossier = async (e) => {
     e.preventDefault();
-    if (!dossierId || !selectedConseiller) {
+    if (!newDossierId || !selectedConseiller) {
       setMessage('Veuillez d\'abord créer le dossier et sélectionner un conseiller');
       return;
     }
@@ -110,7 +144,7 @@ export default function CreateDossier() {
 
     try {
       const token = await getToken();
-      const response = await fetch(`/api/dossiers/${dossierId}/envoyer`, {
+      const response = await fetch(`/api/dossiers/${newDossierId}/envoyer`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -122,7 +156,7 @@ export default function CreateDossier() {
       if (response.ok) {
         setMessage('Dossier envoyé au conseiller avec succès');
         setTimeout(() => {
-          window.location.href = '/dossiers';
+          navigate('/dossiers');
         }, 2000);
       } else {
         setMessage('Erreur lors de l\'envoi du dossier');
@@ -143,11 +177,17 @@ export default function CreateDossier() {
   return (
     <div className="space-y-6 max-w-3xl">
       <div className="flex items-center gap-4">
-        <button onClick={() => window.history.back()} className="btn-outline p-2">
+        <button onClick={() => navigate('/dossiers')} className="btn-outline p-2">
           <ArrowLeft size={20} />
         </button>
-        <h2 className="text-2xl font-bold">Créer un Dossier</h2>
+        <h2 className="text-2xl font-bold">{isEditing ? 'Modifier le Dossier' : 'Créer un Dossier'}</h2>
       </div>
+
+      {loading && (
+        <div className="card-dark text-center py-8">
+          <p className="text-capitune-text">Chargement...</p>
+        </div>
+      )}
 
       {message && (
         <div className={`p-3 rounded ${message.includes('succès') ? 'bg-green-900/50 text-green-300' : 'bg-red-900/50 text-red-300'}`}>
@@ -162,7 +202,7 @@ export default function CreateDossier() {
             value={programme}
             onChange={(e) => setProgramme(e.target.value)}
             className="input-dark w-full"
-            disabled={dossierId}
+            disabled={loading}
           >
             {programmeOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -182,7 +222,7 @@ export default function CreateDossier() {
                 value={formData.nom}
                 onChange={handleInputChange}
                 className="input-dark w-full"
-                disabled={dossierId}
+                disabled={loading}
                 required
               />
             </div>
@@ -194,7 +234,7 @@ export default function CreateDossier() {
                 value={formData.prenom}
                 onChange={handleInputChange}
                 className="input-dark w-full"
-                disabled={dossierId}
+                disabled={loading}
                 required
               />
             </div>
@@ -208,7 +248,7 @@ export default function CreateDossier() {
               value={formData.date_naissance}
               onChange={handleInputChange}
               className="input-dark w-full"
-              disabled={dossierId}
+              disabled={loading}
               required
             />
           </div>
@@ -221,7 +261,7 @@ export default function CreateDossier() {
               value={formData.nationalite}
               onChange={handleInputChange}
               className="input-dark w-full"
-              disabled={dossierId}
+              disabled={loading}
               required
             />
           </div>
@@ -233,7 +273,7 @@ export default function CreateDossier() {
               value={formData.situation_familiale}
               onChange={handleInputChange}
               className="input-dark w-full"
-              disabled={dossierId}
+              disabled={loading}
               required
             >
               <option value="">Sélectionner</option>
@@ -253,7 +293,7 @@ export default function CreateDossier() {
                 value={formData.niveau_etudes}
                 onChange={handleInputChange}
                 className="input-dark w-full"
-                disabled={dossierId}
+                disabled={loading}
                 required
               />
             </div>
@@ -264,7 +304,7 @@ export default function CreateDossier() {
                 value={formData.domaine_etudes}
                 onChange={handleInputChange}
                 className="input-dark w-full"
-                disabled={dossierId}
+                disabled={loading}
                 required
               >
                 <option value="">Sélectionner</option>
@@ -289,7 +329,7 @@ export default function CreateDossier() {
                 value={formData.metier}
                 onChange={handleInputChange}
                 className="input-dark w-full"
-                disabled={dossierId}
+                disabled={loading}
                 required
               >
                 <option value="">Sélectionner</option>
@@ -314,7 +354,7 @@ export default function CreateDossier() {
                 value={formData.annees_experience}
                 onChange={handleInputChange}
                 className="input-dark w-full"
-                disabled={dossierId}
+                disabled={loading}
                 required
                 min="0"
               />
@@ -329,7 +369,7 @@ export default function CreateDossier() {
               onChange={handleInputChange}
               className="input-dark w-full"
               rows={4}
-              disabled={dossierId}
+              disabled={loading}
               required
             />
           </div>
@@ -345,22 +385,19 @@ export default function CreateDossier() {
                   accept=".pdf,.jpg,.jpeg,.png"
                   onChange={handleFileChange}
                   className="hidden"
-                  disabled={dossierId}
                 />
               </label>
               {file && <span className="text-sm text-capitune-text">{file.name}</span>}
             </div>
           </div>
 
-          {!dossierId && (
-            <button type="submit" disabled={saving} className="btn-primary w-full flex items-center justify-center gap-2">
-              <FileText size={18} />
-              {saving ? 'Création...' : 'Créer le Dossier'}
-            </button>
-          )}
+          <button type="submit" disabled={saving || loading} className="btn-primary w-full flex items-center justify-center gap-2">
+            <FileText size={18} />
+            {saving ? (isEditing ? 'Mise à jour...' : 'Création...') : (isEditing ? 'Mettre à jour le Dossier' : 'Créer le Dossier')}
+          </button>
         </form>
 
-        {dossierId && (
+        {!isEditing && newDossierId && (
           <div className="border-t border-capitune-border pt-4 space-y-4">
             <div>
               <label className="block text-xs text-capitune-text uppercase mb-2">Sélectionner un conseiller</label>

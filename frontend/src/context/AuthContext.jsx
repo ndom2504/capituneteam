@@ -124,12 +124,19 @@ export const AuthProvider = ({ children }) => {
     setDbUser(null);
   };
 
+  const resetPassword = async (email) => {
+    if (demoMode) {
+      throw new Error('Reset password not available in demo mode');
+    }
+    await firebaseAuth.sendPasswordResetEmail(auth, email);
+  };
+
   const refreshUser = async () => {
     if (firebaseUser) await fetchDbUser(firebaseUser);
   };
 
   return (
-    <AuthContext.Provider value={{ firebaseUser, dbUser, loading, login, register, loginWithGoogle, logout, getToken, refreshUser }}>
+    <AuthContext.Provider value={{ firebaseUser, dbUser, loading, login, register, loginWithGoogle, logout, resetPassword, getToken, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

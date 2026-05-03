@@ -5,12 +5,14 @@ import { Globe, Shield, Users, TrendingUp, Heart, Rocket, ChevronRight, Mail } f
 
 export default function Login() {
   const [isRegister, setIsRegister] = useState(false);
+  const [isResetPassword, setIsResetPassword] = useState(false);
   const [selectedRole, setSelectedRole] = useState('client');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [error, setError] = useState('');
-  const { login, register, loginWithGoogle } = useAuth();
+  const [message, setMessage] = useState('');
+  const { login, register, loginWithGoogle, resetPassword } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -41,6 +43,18 @@ export default function Login() {
       }
     } catch (err) {
       setError(err.message || 'Erreur lors de la connexion Google');
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    setError('');
+    setMessage('');
+    try {
+      await resetPassword(email);
+      setMessage('Un email de réinitialisation a été envoyé à votre adresse.');
+    } catch (err) {
+      setError(err.message);
     }
   };
 
@@ -109,96 +123,142 @@ export default function Login() {
           </div>
 
           <h2 className="text-2xl font-bold mb-2">
-            {isRegister ? 'Rejoindre CAPITUNE' : 'Bienvenue sur CAPITUNE'}
+            {isResetPassword ? 'Réinitialiser le mot de passe' : (isRegister ? 'Rejoindre CAPITUNE' : 'Bienvenue sur CAPITUNE')}
           </h2>
           <p className="text-capitune-text mb-8 text-sm">
-            {isRegister
-              ? 'Créez votre compte et commencez votre aventure canadienne.'
-              : 'Connectez-vous pour accéder à votre espace personnel.'}
+            {isResetPassword
+              ? 'Entrez votre email pour recevoir un lien de réinitialisation.'
+              : (isRegister
+                ? 'Créez votre compte et commencez votre aventure canadienne.'
+                : 'Connectez-vous pour accéder à votre espace personnel.')}
           </p>
 
-          <div className="mb-4">
-            <label className="block text-sm text-capitune-text mb-2">Je suis un</label>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setSelectedRole('client')}
-                className={`flex-1 py-2 px-4 rounded-lg border text-sm font-medium transition ${
-                  selectedRole === 'client'
-                    ? 'border-capitune-white bg-capitune-white/10 text-capitune-white'
-                    : 'border-capitune-border text-capitune-text hover:border-capitune-white'
-                }`}
-              >
-                Client
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedRole('conseiller')}
-                className={`flex-1 py-2 px-4 rounded-lg border text-sm font-medium transition ${
-                  selectedRole === 'conseiller'
-                    ? 'border-capitune-white bg-capitune-white/10 text-capitune-white'
-                    : 'border-capitune-border text-capitune-text hover:border-capitune-white'
-                }`}
-              >
-                Conseiller
-              </button>
+          {!isResetPassword && (
+            <div className="mb-4">
+              <label className="block text-sm text-capitune-text mb-2">Je suis un</label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedRole('client')}
+                  className={`flex-1 py-2 px-4 rounded-lg border text-sm font-medium transition ${
+                    selectedRole === 'client'
+                      ? 'border-capitune-white bg-capitune-white/10 text-capitune-white'
+                      : 'border-capitune-border text-capitune-text hover:border-capitune-white'
+                  }`}
+                >
+                  Client
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedRole('conseiller')}
+                  className={`flex-1 py-2 px-4 rounded-lg border text-sm font-medium transition ${
+                    selectedRole === 'conseiller'
+                      ? 'border-capitune-white bg-capitune-white/10 text-capitune-white'
+                      : 'border-capitune-border text-capitune-text hover:border-capitune-white'
+                  }`}
+                >
+                  Conseiller
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
-          <button
-            onClick={handleGoogleSignIn}
-            className="w-full flex items-center justify-center gap-3 bg-capitune-white text-capitune-black font-semibold py-3 px-4 rounded-lg hover:bg-gray-100 transition mb-4"
-          >
-            <Mail size={18} />
-            {isRegister ? 'S\'inscrire avec Google' : 'Continuer avec Google'}
-          </button>
+          {!isResetPassword && (
+            <button
+              onClick={handleGoogleSignIn}
+              className="w-full flex items-center justify-center gap-3 bg-capitune-white text-capitune-black font-semibold py-3 px-4 rounded-lg hover:bg-gray-100 transition mb-4"
+            >
+              <Mail size={18} />
+              {isRegister ? 'S\'inscrire avec Google' : 'Continuer avec Google'}
+            </button>
+          )}
 
-          <div className="flex items-center gap-3 mb-6">
-            <div className="flex-1 h-px bg-capitune-border" />
-            <span className="text-xs text-capitune-text uppercase">ou</span>
-            <div className="flex-1 h-px bg-capitune-border" />
-          </div>
+          {!isResetPassword && (
+            <div className="flex items-center gap-3 mb-6">
+              <div className="flex-1 h-px bg-capitune-border" />
+              <span className="text-xs text-capitune-text uppercase">ou</span>
+              <div className="flex-1 h-px bg-capitune-border" />
+            </div>
+          )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {isRegister && (
+          {isResetPassword ? (
+            <form onSubmit={handleResetPassword} className="space-y-4">
               <input
-                type="text"
-                placeholder="Nom complet"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="input-dark w-full"
                 required
               />
-            )}
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="input-dark w-full"
-              required
-            />
-            <input
-              type="password"
-              placeholder="Mot de passe"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="input-dark w-full"
-              required
-            />
-            {error && <p className="text-red-500 text-sm">{error}</p>}
-            <button type="submit" className="btn-primary w-full flex items-center justify-center gap-2">
-              {isRegister ? 'Créer un compte' : 'Se connecter'}
-              <ChevronRight size={18} />
-            </button>
-          </form>
+              {error && <p className="text-red-500 text-sm">{error}</p>}
+              {message && <p className="text-green-500 text-sm">{message}</p>}
+              <button type="submit" className="btn-primary w-full flex items-center justify-center gap-2">
+                Envoyer le lien de réinitialisation
+                <ChevronRight size={18} />
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {isRegister && (
+                <input
+                  type="text"
+                  placeholder="Nom complet"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  className="input-dark w-full"
+                  required
+                />
+              )}
+              <input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="input-dark w-full"
+                required
+              />
+              <input
+                type="password"
+                placeholder="Mot de passe"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="input-dark w-full"
+                required
+              />
+              {error && <p className="text-red-500 text-sm">{error}</p>}
+              <button type="submit" className="btn-primary w-full flex items-center justify-center gap-2">
+                {isRegister ? 'Créer un compte' : 'Se connecter'}
+                <ChevronRight size={18} />
+              </button>
+            </form>
+          )}
 
-          <p className="mt-6 text-center text-capitune-text text-sm">
-            {isRegister ? 'Déjà un compte ?' : 'Pas de compte ?'}{' '}
-            <button onClick={() => setIsRegister(!isRegister)} className="text-capitune-white font-semibold hover:underline">
-              {isRegister ? 'Se connecter' : 'S\'inscrire'}
-            </button>
-          </p>
+          {!isResetPassword && (
+            <>
+              <p className="mt-6 text-center text-capitune-text text-sm">
+                {isRegister ? 'Déjà un compte ?' : 'Pas de compte ?'}{' '}
+                <button onClick={() => setIsRegister(!isRegister)} className="text-capitune-white font-semibold hover:underline">
+                  {isRegister ? 'Se connecter' : 'S\'inscrire'}
+                </button>
+              </p>
+              {!isRegister && (
+                <p className="mt-2 text-center text-capitune-text text-sm">
+                  <button onClick={() => setIsResetPassword(true)} className="text-capitune-white hover:underline">
+                    Mot de passe oublié ?
+                  </button>
+                </p>
+              )}
+            </>
+          )}
+
+          {isResetPassword && (
+            <p className="mt-6 text-center text-capitune-text text-sm">
+              <button onClick={() => setIsResetPassword(false)} className="text-capitune-white font-semibold hover:underline">
+                Retour à la connexion
+              </button>
+            </p>
+          )}
 
           <div className="mt-8 pt-6 border-t border-capitune-border">
             <p className="text-xs text-capitune-text text-center flex items-center justify-center gap-2">

@@ -28,6 +28,7 @@ function AppRoutes() {
       <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/dossiers" element={<ProtectedRoute><Dossiers /></ProtectedRoute>} />
       <Route path="/dossiers/create" element={<ProtectedRoute><CreateDossier /></ProtectedRoute>} />
+      <Route path="/dossiers/:id/edit" element={<ProtectedRoute><CreateDossier /></ProtectedRoute>} />
       <Route path="/dossiers/:id" element={<ProtectedRoute><DossierDetail /></ProtectedRoute>} />
       <Route path="/conseiller" element={<ProtectedRoute><ConseillerDashboard /></ProtectedRoute>} />
       <Route path="/tickets" element={<ProtectedRoute><Tickets /></ProtectedRoute>} />

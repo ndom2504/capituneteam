@@ -146,4 +146,66 @@ router.post('/:id/refuser', verifyToken, requireRole(['conseiller']), async (req
   }
 });
 
+// PUT /api/dossiers/:id - Update dossier (only for brouillons)
+router.put('/:id', verifyToken, requireRole(['client']), loadUser, upload.single('file'), async (req, res) => {
+  try {
+    const programme = req.body.programme;
+    const data = JSON.parse(req.body.data);
+    const client_id = req.user.dbUser.id;
+
+    // Check if dossier exists and belongs to client and is in brouillon status
+    const checkResult = await query(
+      'SELECT * FROM dossiers WHERE id = $1 AND client_id = $2 AND statut = $3',
+      [req.params.id, client_id, 'brouillon']
+    );
+    if (!checkResult.rows.length) {
+      return res.status(403).json({ error: 'Dossier not found or cannot be edited' });
+    }
+
+    let file_url = checkResult.rows[0].file_url;
+    if (req.file) {
+      const result = await new Promise((resolve, reject) => {
+        cloudinary.uploader.upload_stream(
+          {
+            folder: 'capitune/dossiers',
+            resource_type: 'auto',
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        ).end(req.file.buffer);
+      });
+      file_url = result.secure_url;
+    }
+
+    const updateResult = await query(
+      `UPDATE dossiers SET programme = $1, data = $2, file_url = $3 WHERE id = $4 RETURNING *`,
+      [programme, data, file_url, req.params.id]
+    );
+    res.json(updateResult.rows[0]);
+  } catch (err) {
+    console.error('Error updating dossier:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /api/dossiers/:id - Delete dossier (only for brouillons)
+router.delete('/:id', verifyToken, requireRole(['client']), loadUser, async (req, res) => {
+  try {
+    const client_id = req.user.dbUser.id;
+
+    const result = await query(
+      'DELETE FROM dossiers WHERE id = $1 AND client_id = $2 AND statut = $3 RETURNING *',
+      [req.params.id, client_id, 'brouillon']
+    );
+    if (!result.rows.length) {
+      return res.status(403).json({ error: 'Dossier not found or cannot be deleted' });
+    }
+    res.json({ message: 'Dossier deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 export default router;
