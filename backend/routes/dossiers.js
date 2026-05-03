@@ -101,8 +101,11 @@ router.post('/:id/envoyer', verifyToken, requireRole(['client']), loadUser, asyn
 });
 
 // GET /api/conseiller/dossiers - List dossiers for conseiller
-router.get('/conseiller/dossiers', verifyToken, requireRole(['conseiller']), async (req, res) => {
+router.get('/conseiller/dossiers', verifyToken, requireRole(['conseiller']), loadUser, async (req, res) => {
   try {
+    if (!req.user.dbUser) {
+      return res.status(404).json({ error: 'User not found in database' });
+    }
     const result = await query(
       `SELECT d.*, u.first_name, u.last_name, u.email
        FROM dossiers d
@@ -118,8 +121,11 @@ router.get('/conseiller/dossiers', verifyToken, requireRole(['conseiller']), asy
 });
 
 // POST /api/dossiers/:id/accepter - Accept dossier by conseiller
-router.post('/:id/accepter', verifyToken, requireRole(['conseiller']), async (req, res) => {
+router.post('/:id/accepter', verifyToken, requireRole(['conseiller']), loadUser, async (req, res) => {
   try {
+    if (!req.user.dbUser) {
+      return res.status(404).json({ error: 'User not found in database' });
+    }
     const result = await query(
       `UPDATE dossiers SET statut = 'accepte' WHERE id = $1 AND conseiller_id = $2 RETURNING *`,
       [req.params.id, req.user.dbUser.id]
@@ -132,8 +138,11 @@ router.post('/:id/accepter', verifyToken, requireRole(['conseiller']), async (re
 });
 
 // POST /api/dossiers/:id/refuser - Refuse dossier with reason
-router.post('/:id/refuser', verifyToken, requireRole(['conseiller']), async (req, res) => {
+router.post('/:id/refuser', verifyToken, requireRole(['conseiller']), loadUser, async (req, res) => {
   try {
+    if (!req.user.dbUser) {
+      return res.status(404).json({ error: 'User not found in database' });
+    }
     const { refusal_reason } = req.body;
     const result = await query(
       `UPDATE dossiers SET statut = 'refuse', refusal_reason = $1 WHERE id = $2 AND conseiller_id = $3 RETURNING *`,
