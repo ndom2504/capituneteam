@@ -24,6 +24,8 @@ export default function CreateDossier() {
   const [message, setMessage] = useState('');
   const [dossierId, setDossierId] = useState(null);
 
+  console.log('CreateDossier component mounted');
+
   useEffect(() => {
     async function fetchConseillers() {
       try {
