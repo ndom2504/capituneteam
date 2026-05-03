@@ -87,11 +87,31 @@ export default function Messages() {
               <div key={m.id} className={`max-w-[70%] ${m.sender_id === dbUser?.id ? 'ml-auto' : ''}`}>
                 <div className={`rounded-xl px-4 py-2 text-sm ${m.sender_id === dbUser?.id ? 'bg-capitune-white text-capitune-black' : 'bg-capitune-gray text-capitune-white'}`}>
                   <p className="text-xs opacity-70 mb-1">{m.sender_name}</p>
-                  <p>{m.content}</p>
+                  {m.content && <p>{m.content}</p>}
                   {m.file_url && (
-                    <a href={m.file_url} target="_blank" rel="noreferrer" className="underline text-xs block mt-1">
-                      📎 Fichier
-                    </a>
+                    <div className="mt-2 space-y-2">
+                      {m.file_url.includes('.pdf') ? (
+                        <div>
+                          <img
+                            src={m.file_url.replace('/upload/', '/upload/f_jpg,q_auto,w_300,h_400,c_pad/')}
+                            alt="Aperçu du fichier"
+                            className="w-full h-40 object-cover rounded cursor-pointer"
+                            onClick={() => window.open(m.file_url, '_blank')}
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.nextElementSibling.style.display = 'block';
+                            }}
+                          />
+                          <a href={m.file_url} target="_blank" rel="noreferrer" className="underline text-xs block mt-1 hidden">
+                            📎 Fichier PDF
+                          </a>
+                        </div>
+                      ) : (
+                        <a href={m.file_url} target="_blank" rel="noreferrer" className="underline text-xs block mt-1">
+                          📎 Fichier
+                        </a>
+                      )}
+                    </div>
                   )}
                 </div>
                 <p className="text-[10px] text-capitune-text mt-1">{new Date(m.created_at).toLocaleString('fr-CA')}</p>

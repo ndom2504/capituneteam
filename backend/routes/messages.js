@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { query } from '../config/db.js';
 import { verifyToken, loadUser } from '../middleware/auth.js';
 import multer from 'multer';
+import cloudinary from '../config/cloudinary.js';
 
 // Use memory storage for Vercel (read-only filesystem)
 const storage = multer.memoryStorage();
@@ -75,15 +76,34 @@ router.post('/:dossierId', verifyToken, loadUser, upload.single('file'), async (
     const { content } = req.body;
     const dossierId = req.params.dossierId;
     const senderId = req.user.dbUser.id;
-    // For memoryStorage, files are in req.file.buffer - store as base64 or use cloud storage
-    const fileUrl = req.file ? `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}` : null;
-    const result = await query(
+    let fileUrl = null;
+
+    if (req.file) {
+      // Upload to Cloudinary
+      const result = await new Promise((resolve, reject) => {
+        cloudinary.uploader.upload_stream(
+          {
+            folder: 'capitune/messages',
+            resource_type: 'auto',
+            public_id: `${dossierId}_${Date.now()}`,
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        ).end(req.file.buffer);
+      });
+      fileUrl = result.secure_url;
+    }
+
+    const dbResult = await query(
       `INSERT INTO messages (dossier_id, sender_id, content, file_url, created_at)
        VALUES ($1, $2, $3, $4, NOW()) RETURNING *`,
       [dossierId, senderId, content || '', fileUrl]
     );
-    res.status(201).json(result.rows[0]);
+    res.status(201).json(dbResult.rows[0]);
   } catch (err) {
+    console.error('Error uploading file:', err);
     res.status(500).json({ error: err.message });
   }
 });
