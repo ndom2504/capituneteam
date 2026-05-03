@@ -5,7 +5,7 @@ import { verifyToken, requireRole, loadUser } from '../middleware/auth.js';
 const router = Router();
 
 // POST /api/dossiers - Create dossier by client
-router.post('/', verifyToken, requireRole(['client']), async (req, res) => {
+router.post('/', verifyToken, requireRole(['client']), loadUser, async (req, res) => {
   try {
     const { programme, data } = req.body;
     const client_id = req.user.dbUser.id;
