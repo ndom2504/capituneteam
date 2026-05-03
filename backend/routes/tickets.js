@@ -6,7 +6,7 @@ const router = Router();
 
 router.get('/', verifyToken, loadUser, async (req, res) => {
   try {
-    let sql = 'SELECT t.*, d.title as dossier_title FROM tickets t JOIN dossiers d ON t.dossier_id = d.id';
+    let sql = 'SELECT t.*, d.data, d.programme FROM tickets t JOIN dossiers d ON t.dossier_id = d.id';
     let params = [];
     if (req.user.role === 'client') {
       sql += ' WHERE d.client_id = $1';
