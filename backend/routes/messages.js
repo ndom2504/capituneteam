@@ -11,6 +11,9 @@ const router = Router();
 
 router.get('/', verifyToken, loadUser, async (req, res) => {
   try {
+    if (!req.user.dbUser) {
+      return res.status(404).json({ error: 'User not found in database' });
+    }
     const uid = req.user.dbUser.id;
     let result;
     if (req.user.role === 'conseiller') {
@@ -64,8 +67,11 @@ router.get('/:dossierId', verifyToken, loadUser, async (req, res) => {
   }
 });
 
-router.post('/:dossierId', verifyToken, upload.single('file'), async (req, res) => {
+router.post('/:dossierId', verifyToken, loadUser, upload.single('file'), async (req, res) => {
   try {
+    if (!req.user.dbUser) {
+      return res.status(404).json({ error: 'User not found in database' });
+    }
     const { content } = req.body;
     const dossierId = req.params.dossierId;
     const senderId = req.user.dbUser.id;
