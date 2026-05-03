@@ -31,7 +31,13 @@ export default function CreateDossier() {
         const res = await fetch('/api/users/conseillers', {
           headers: { Authorization: `Bearer ${token}` }
         });
-        if (res.ok) setConseillers(await res.json());
+        if (res.ok) {
+          const data = await res.json();
+          console.log('Conseillers fetched:', data);
+          setConseillers(data);
+        } else {
+          console.error('Failed to fetch conseillers:', res.status);
+        }
       } catch (err) {
         console.error('Error fetching conseillers:', err);
       }
