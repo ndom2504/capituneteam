@@ -123,22 +123,34 @@ export default function DossierDetail() {
         </div>
       )}
 
+      {loading && !dossier && (
+        <div className="card-dark text-center py-8">
+          <p className="text-capitune-text">Chargement...</p>
+        </div>
+      )}
+
+      {!loading && !dossier && (
+        <div className="card-dark text-center py-8">
+          <p className="text-capitune-text">Dossier non trouvé</p>
+        </div>
+      )}
+
       {dossier && (
         <div className="card-dark space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold">Dossier #{dossier.id}</h2>
             <span className="text-sm bg-capitune-gray border border-capitune-border px-3 py-1 rounded-full">
-              {statutLabel[dossier.statut]}
+              {statutLabel[dossier.statut] || dossier.statut}
             </span>
           </div>
 
           <div className="flex items-center gap-2">
             <span className="px-2 py-1 text-xs rounded-full bg-blue-600">
-              {programmeLabel[dossier.programme]}
+              {programmeLabel[dossier.programme] || dossier.programme}
             </span>
             <span className="text-sm text-capitune-text">
               <Calendar size={14} className="inline mr-1" />
-              {new Date(dossier.created_at).toLocaleDateString('fr-FR')}
+              {dossier.created_at ? new Date(dossier.created_at).toLocaleDateString('fr-FR') : 'N/A'}
             </span>
           </div>
 
@@ -146,24 +158,24 @@ export default function DossierDetail() {
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Informations personnelles</h3>
               <div className="grid grid-cols-2 gap-4">
-                <div><span className="text-capitune-text">Nom:</span> {dossier.data.nom}</div>
-                <div><span className="text-capitune-text">Prénom:</span> {dossier.data.prenom}</div>
-                <div><span className="text-capitune-text">Date de naissance:</span> {dossier.data.date_naissance}</div>
-                <div><span className="text-capitune-text">Nationalité:</span> {dossier.data.nationalite}</div>
-                <div><span className="text-capitune-text">Situation familiale:</span> {dossier.data.situation_familiale}</div>
-                <div><span className="text-capitune-text">Niveau d'études:</span> {dossier.data.niveau_etudes}</div>
+                <div><span className="text-capitune-text">Nom:</span> {dossier.data.nom || 'N/A'}</div>
+                <div><span className="text-capitune-text">Prénom:</span> {dossier.data.prenom || 'N/A'}</div>
+                <div><span className="text-capitune-text">Date de naissance:</span> {dossier.data.date_naissance || 'N/A'}</div>
+                <div><span className="text-capitune-text">Nationalité:</span> {dossier.data.nationalite || 'N/A'}</div>
+                <div><span className="text-capitune-text">Situation familiale:</span> {dossier.data.situation_familiale || 'N/A'}</div>
+                <div><span className="text-capitune-text">Niveau d'études:</span> {dossier.data.niveau_etudes || 'N/A'}</div>
               </div>
 
               <h3 className="text-lg font-semibold">Profession</h3>
               <div className="grid grid-cols-2 gap-4">
-                <div><span className="text-capitune-text">Métier:</span> {metierLabel[dossier.data.metier] || dossier.data.metier}</div>
-                <div><span className="text-capitune-text">Années d'expérience:</span> {dossier.data.annees_experience}</div>
-                <div><span className="text-capitune-text">Domaine d'études:</span> {domaineEtudesLabel[dossier.data.domaine_etudes] || dossier.data.domaine_etudes}</div>
+                <div><span className="text-capitune-text">Métier:</span> {metierLabel[dossier.data.metier] || dossier.data.metier || 'N/A'}</div>
+                <div><span className="text-capitune-text">Années d'expérience:</span> {dossier.data.annees_experience || 'N/A'}</div>
+                <div><span className="text-capitune-text">Domaine d'études:</span> {domaineEtudesLabel[dossier.data.domaine_etudes] || dossier.data.domaine_etudes || 'N/A'}</div>
               </div>
 
               <div>
                 <h3 className="text-lg font-semibold mb-2">Motivation</h3>
-                <p className="text-capitune-text">{dossier.data.motivation}</p>
+                <p className="text-capitune-text">{dossier.data.motivation || 'N/A'}</p>
               </div>
             </div>
           )}
