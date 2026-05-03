@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
-import { FileText, Send, ArrowLeft } from 'lucide-react';
+import { FileText, Send, ArrowLeft, Upload } from 'lucide-react';
 
 export default function CreateDossier() {
   const { dbUser, getToken } = useAuth();
@@ -12,9 +12,13 @@ export default function CreateDossier() {
     nationalite: '',
     situation_familiale: '',
     niveau_etudes: '',
+    domaine_etudes: '',
+    metier: '',
+    annees_experience: '',
     experience_travail: '',
     motivation: '',
   });
+  const [file, setFile] = useState(null);
   const [conseillers, setConseillers] = useState([]);
   const [selectedConseiller, setSelectedConseiller] = useState('');
   const [saving, setSaving] = useState(false);
@@ -25,6 +29,17 @@ export default function CreateDossier() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      if (selectedFile.size > 5 * 1024 * 1024) {
+        setMessage('Le fichier est trop grand. Maximum 5MB.');
+        return;
+      }
+      setFile(selectedFile);
+    }
+  };
+
   const handleCreateDossier = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -32,16 +47,19 @@ export default function CreateDossier() {
 
     try {
       const token = await getToken();
+      const formDataToSend = new FormData();
+      formDataToSend.append('programme', programme);
+      formDataToSend.append('data', JSON.stringify(formData));
+      if (file) {
+        formDataToSend.append('file', file);
+      }
+
       const response = await fetch('/api/dossiers', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          programme,
-          data: formData,
-        }),
+        body: formDataToSend,
       });
 
       if (response.ok) {
@@ -204,17 +222,59 @@ export default function CreateDossier() {
             </select>
           </div>
 
-          <div>
-            <label className="block text-xs text-capitune-text uppercase mb-2">Niveau d'études</label>
-            <input
-              type="text"
-              name="niveau_etudes"
-              value={formData.niveau_etudes}
-              onChange={handleInputChange}
-              className="input-dark w-full"
-              disabled={dossierId}
-              required
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs text-capitune-text uppercase mb-2">Niveau d'études</label>
+              <input
+                type="text"
+                name="niveau_etudes"
+                value={formData.niveau_etudes}
+                onChange={handleInputChange}
+                className="input-dark w-full"
+                disabled={dossierId}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-capitune-text uppercase mb-2">Domaine d'études</label>
+              <input
+                type="text"
+                name="domaine_etudes"
+                value={formData.domaine_etudes}
+                onChange={handleInputChange}
+                className="input-dark w-full"
+                disabled={dossierId}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs text-capitune-text uppercase mb-2">Métier</label>
+              <input
+                type="text"
+                name="metier"
+                value={formData.metier}
+                onChange={handleInputChange}
+                className="input-dark w-full"
+                disabled={dossierId}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-capitune-text uppercase mb-2">Années d'expérience</label>
+              <input
+                type="number"
+                name="annees_experience"
+                value={formData.annees_experience}
+                onChange={handleInputChange}
+                className="input-dark w-full"
+                disabled={dossierId}
+                required
+                min="0"
+              />
+            </div>
           </div>
 
           <div>
@@ -241,6 +301,24 @@ export default function CreateDossier() {
               disabled={dossierId}
               required
             />
+          </div>
+
+          <div>
+            <label className="block text-xs text-capitune-text uppercase mb-2">Document (PDF, Image)</label>
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 btn-outline cursor-pointer">
+                <Upload size={18} />
+                <span>Choisir un fichier</span>
+                <input
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  onChange={handleFileChange}
+                  className="hidden"
+                  disabled={dossierId}
+                />
+              </label>
+              {file && <span className="text-sm text-capitune-text">{file.name}</span>}
+            </div>
           </div>
 
           {!dossierId && (

@@ -15,13 +15,17 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS first_name VARCHAR(100);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS last_name VARCHAR(100);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_photo_url VARCHAR(500);
 
-CREATE TABLE IF NOT EXISTS dossiers (
+-- Drop existing dossiers table if it exists with old structure
+DROP TABLE IF EXISTS dossiers CASCADE;
+
+CREATE TABLE dossiers (
   id SERIAL PRIMARY KEY,
   client_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
   conseiller_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
   programme VARCHAR(50) CHECK (programme IN ('entree_express', 'permis_etude', 'affaires')) NOT NULL,
   statut VARCHAR(20) CHECK (statut IN ('brouillon', 'envoye', 'accepte', 'refuse')) DEFAULT 'brouillon',
   data JSONB,
+  file_url VARCHAR(500),
   refusal_reason TEXT,
   created_at TIMESTAMP DEFAULT NOW()
 );

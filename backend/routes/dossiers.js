@@ -1,21 +1,44 @@
 import { Router } from 'express';
 import { query } from '../config/db.js';
 import { verifyToken, requireRole, loadUser } from '../middleware/auth.js';
+import multer from 'multer';
+import cloudinary from '../config/cloudinary.js';
 
+const upload = multer({ storage: multer.memoryStorage() });
 const router = Router();
 
 // POST /api/dossiers - Create dossier by client
-router.post('/', verifyToken, requireRole(['client']), loadUser, async (req, res) => {
+router.post('/', verifyToken, requireRole(['client']), loadUser, upload.single('file'), async (req, res) => {
   try {
-    const { programme, data } = req.body;
+    const programme = req.body.programme;
+    const data = JSON.parse(req.body.data);
     const client_id = req.user.dbUser.id;
-    const result = await query(
-      `INSERT INTO dossiers (client_id, programme, statut, data, created_at)
-       VALUES ($1, $2, 'brouillon', $3, NOW()) RETURNING *`,
-      [client_id, programme, data]
+
+    let file_url = null;
+    if (req.file) {
+      const result = await new Promise((resolve, reject) => {
+        cloudinary.uploader.upload_stream(
+          {
+            folder: 'capitune/dossiers',
+            resource_type: 'auto',
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        ).end(req.file.buffer);
+      });
+      file_url = result.secure_url;
+    }
+
+    const dbResult = await query(
+      `INSERT INTO dossiers (client_id, programme, statut, data, file_url, created_at)
+       VALUES ($1, $2, 'brouillon', $3, $4, NOW()) RETURNING *`,
+      [client_id, programme, data, file_url]
     );
-    res.status(201).json(result.rows[0]);
+    res.status(201).json(dbResult.rows[0]);
   } catch (err) {
+    console.error('Error creating dossier:', err);
     res.status(500).json({ error: err.message });
   }
 });
