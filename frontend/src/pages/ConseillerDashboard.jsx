@@ -17,7 +17,7 @@ export default function ConseillerDashboard() {
     setLoading(true);
     try {
       const token = await getToken();
-      const res = await fetch('/api/conseiller/dossiers', {
+      const res = await fetch('/api/dossiers/conseiller/dossiers', {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) setDossiers(await res.json());
