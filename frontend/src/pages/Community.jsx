@@ -17,12 +17,14 @@ export default function Community() {
   const [posts, setPosts] = useState([]);
   const [comments, setComments] = useState({});
   const [commentText, setCommentText] = useState({});
+  const [replyTo, setReplyTo] = useState({});
   const [form, setForm] = useState({ title: '', content: '' });
   const [media, setMedia] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
   const canPublish = dbUser?.role === 'conseiller' || dbUser?.role === 'admin';
+  const isAdviser = dbUser?.role === 'conseiller' || dbUser?.role === 'admin';
 
   async function authHeaders() {
     const token = await getToken();
@@ -92,6 +94,7 @@ export default function Community() {
     });
     if (res.ok) {
       setCommentText({ ...commentText, [postId]: '' });
+      setReplyTo({ ...replyTo, [postId]: null });
       fetchComments(postId);
       fetchPosts();
     }
@@ -139,8 +142,8 @@ export default function Community() {
             {post.media_url && post.media_type === 'image' && <img src={post.media_url} alt={post.title || 'Publication'} className="rounded-xl w-full max-h-[520px] object-cover border border-capitune-border" />}
             {post.media_url && post.media_type === 'video' && <video src={post.media_url} controls className="rounded-xl w-full border border-capitune-border" />}
             <div className="flex items-center gap-3 border-t border-capitune-border pt-3">
-              <button onClick={() => toggleLike(post.id)} className={`btn-outline text-sm ${post.liked_by_me ? 'bg-capitune-white text-capitune-black' : ''}`}>
-                <Heart size={16} /> {post.likes_count || 0}
+              <button onClick={() => toggleLike(post.id)} className={`btn-outline text-sm ${post.liked_by_me ? 'border-red-500 text-red-500' : ''}`}>
+                <Heart size={16} fill={post.liked_by_me ? 'currentColor' : 'none'} /> {post.likes_count || 0}
               </button>
               <button onClick={() => fetchComments(post.id)} className="btn-outline text-sm">
                 <MessageCircle size={16} /> {post.comments_count || 0}
@@ -151,12 +154,29 @@ export default function Community() {
                 {comments[post.id].map(comment => (
                   <div key={comment.id} className="flex gap-3 bg-capitune-gray/40 border border-capitune-border rounded-xl p-3">
                     <ProfileBubble name={comment.user_name} photoUrl={comment.user_photo_url} />
-                    <div>
-                      <p className="text-sm font-semibold">{comment.user_name || 'Utilisateur'}</p>
+                    <div className="flex-1">
+                      <div className="flex justify-between items-start">
+                        <p className="text-sm font-semibold">{comment.user_name || 'Utilisateur'}</p>
+                        {isAdviser && (
+                          <button onClick={() => setReplyTo({ ...replyTo, [post.id]: comment.id })} className="text-xs text-capitune-text hover:text-capitune-white">
+                            Répondre
+                          </button>
+                        )}
+                      </div>
                       <p className="text-sm text-capitune-text">{comment.content}</p>
                     </div>
                   </div>
                 ))}
+                {replyTo[post.id] && (
+                  <div className="bg-capitune-gray/60 border border-capitune-border rounded-xl p-3">
+                    <p className="text-xs text-capitune-text mb-2">Répondre à un commentaire</p>
+                    <div className="flex gap-2">
+                      <input value={commentText[post.id] || ''} onChange={e => setCommentText({ ...commentText, [post.id]: e.target.value })} className="input-dark flex-1" placeholder="Écrire une réponse..." />
+                      <button onClick={() => addComment(post.id)} className="btn-primary"><Send size={16} /></button>
+                      <button onClick={() => setReplyTo({ ...replyTo, [post.id]: null })} className="btn-outline">Annuler</button>
+                    </div>
+                  </div>
+                )}
                 <div className="flex gap-2">
                   <input value={commentText[post.id] || ''} onChange={e => setCommentText({ ...commentText, [post.id]: e.target.value })} className="input-dark flex-1" placeholder="Ajouter un commentaire..." />
                   <button onClick={() => addComment(post.id)} className="btn-primary"><Send size={16} /></button>

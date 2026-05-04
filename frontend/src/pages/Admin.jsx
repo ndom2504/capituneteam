@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { apiFetch } from '../config/api.js';
-import { Shield, Users, FolderOpen, CreditCard } from 'lucide-react';
+import { Shield, Users, FolderOpen, CreditCard, MessageSquare } from 'lucide-react';
 
 const userStatuses = [
   ['active', 'Actif'],
@@ -42,6 +42,7 @@ export default function Admin() {
   const [users, setUsers] = useState([]);
   const [dossiers, setDossiers] = useState([]);
   const [payments, setPayments] = useState([]);
+  const [posts, setPosts] = useState([]);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -56,16 +57,18 @@ export default function Admin() {
     try {
       const headers = await authHeaders();
       await apiFetch('/api/admin/migrate', { method: 'POST', headers });
-      const [overviewRes, usersRes, dossiersRes, paymentsRes] = await Promise.all([
+      const [overviewRes, usersRes, dossiersRes, paymentsRes, postsRes] = await Promise.all([
         apiFetch('/api/admin/overview', { headers }),
         apiFetch('/api/admin/users', { headers }),
         apiFetch('/api/admin/dossiers', { headers }),
         apiFetch('/api/admin/payments', { headers }),
+        apiFetch('/api/community', { headers }),
       ]);
       if (overviewRes.ok) setOverview(await overviewRes.json());
       if (usersRes.ok) setUsers(await usersRes.json());
       if (dossiersRes.ok) setDossiers(await dossiersRes.json());
       if (paymentsRes.ok) setPayments(await paymentsRes.json());
+      if (postsRes.ok) setPosts(await postsRes.json());
     } catch {
       setMessage('Erreur de chargement du panneau admin');
     } finally {
@@ -117,6 +120,18 @@ export default function Admin() {
     }
   }
 
+  async function deletePost(id) {
+    const headers = await authHeaders();
+    const res = await apiFetch(`/api/community/${id}`, {
+      method: 'DELETE',
+      headers,
+    });
+    if (res.ok) {
+      setPosts(posts.filter(p => p.id !== id));
+      setMessage('Publication supprimée');
+    }
+  }
+
   if (dbUser?.role !== 'admin') {
     return <div className="card-dark">Accès réservé aux administrateurs.</div>;
   }
@@ -146,6 +161,7 @@ export default function Admin() {
         <button onClick={() => setActiveTab('users')} className={activeTab === 'users' ? 'btn-primary' : 'btn-outline'}><Users size={16} /> Utilisateurs</button>
         <button onClick={() => setActiveTab('dossiers')} className={activeTab === 'dossiers' ? 'btn-primary' : 'btn-outline'}><FolderOpen size={16} /> Dossiers</button>
         <button onClick={() => setActiveTab('payments')} className={activeTab === 'payments' ? 'btn-primary' : 'btn-outline'}><CreditCard size={16} /> Paiements</button>
+        <button onClick={() => setActiveTab('posts')} className={activeTab === 'posts' ? 'btn-primary' : 'btn-outline'}><MessageSquare size={16} /> Publications</button>
       </div>
 
       {loading && <div className="card-dark">Chargement...</div>}
@@ -203,6 +219,32 @@ export default function Admin() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {!loading && activeTab === 'posts' && (
+        <div className="card-dark space-y-4">
+          <h3 className="font-semibold">Publications de la communauté</h3>
+          {posts.length === 0 ? <p className="text-capitune-text">Aucune publication.</p> : (
+            <div className="space-y-3">
+              {posts.map(post => (
+                <div key={post.id} className="border border-capitune-border rounded-xl p-4 space-y-2">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-semibold">{post.author_name || 'Conseiller'}</p>
+                      <p className="text-xs text-capitune-text">{new Date(post.created_at).toLocaleString('fr-CA')}</p>
+                    </div>
+                    <button onClick={() => deletePost(post.id)} className="btn-outline text-xs text-red-400 border-red-400 hover:bg-red-400/20">Supprimer</button>
+                  </div>
+                  {post.title && <h4 className="font-bold">{post.title}</h4>}
+                  {post.content && <p className="text-capitune-text text-sm">{post.content}</p>}
+                  {post.media_url && post.media_type === 'image' && <img src={post.media_url} alt="" className="rounded-lg max-h-40 w-auto" />}
+                  {post.media_url && post.media_type === 'video' && <video src={post.media_url} controls className="rounded-lg max-h-40 w-auto" />}
+                  <p className="text-xs text-capitune-text">{post.likes_count || 0} likes • {post.comments_count || 0} commentaires</p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

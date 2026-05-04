@@ -151,4 +151,14 @@ router.post('/:postId/like', verifyToken, loadUser, async (req, res) => {
   }
 });
 
+router.delete('/:postId', verifyToken, requireRole(['admin']), async (req, res) => {
+  try {
+    await ensureCommunityTables();
+    await query('DELETE FROM community_posts WHERE id = $1', [req.params.postId]);
+    res.json({ message: 'Publication supprimée' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 export default router;
