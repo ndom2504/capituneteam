@@ -4,7 +4,10 @@ import cloudinary from '../config/cloudinary.js';
 import { query } from '../config/db.js';
 import { verifyToken, requireRole, loadUser } from '../middleware/auth.js';
 
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 50 * 1024 * 1024 } // 50MB
+});
 const router = Router();
 
 async function ensureCommunityTables() {
