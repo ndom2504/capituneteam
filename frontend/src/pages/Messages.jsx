@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import { apiFetch } from '../config/api.js';
 import { Send, Paperclip, FileText, Download } from 'lucide-react';
 
 function FileAttachment({ url, isMine }) {
@@ -74,13 +75,13 @@ export default function Messages() {
     const token = await getToken();
     // For conseiller, fetch assigned dossiers; for client, fetch own dossiers
     const endpoint = dbUser?.role === 'conseiller' ? '/api/dossiers/conseiller/dossiers/all' : '/api/dossiers';
-    const res = await fetch(endpoint, { headers: { Authorization: `Bearer ${token}` } });
+    const res = await apiFetch(endpoint, { headers: { Authorization: `Bearer ${token}` } });
     if (res.ok) setDossiers(await res.json());
   }
 
   async function fetchMessages(id) {
     const token = await getToken();
-    const res = await fetch(`/api/messages/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+    const res = await apiFetch(`/api/messages/${id}`, { headers: { Authorization: `Bearer ${token}` } });
     if (res.ok) setMessages(await res.json());
   }
 
@@ -106,7 +107,7 @@ export default function Messages() {
       const formData = new FormData();
       formData.append('content', text);
       if (file) formData.append('file', file);
-      const res = await fetch(`/api/messages/${selected}`, {
+      const res = await apiFetch(`/api/messages/${selected}`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
