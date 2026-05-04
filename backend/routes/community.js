@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import cloudinary from '../config/cloudinary.js';
 import { query } from '../config/db.js';
 import { verifyToken, requireRole, loadUser } from '../middleware/auth.js';
 
@@ -50,26 +49,6 @@ router.get('/', verifyToken, loadUser, async (req, res) => {
       [userId]
     );
     res.json(result.rows);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-router.get('/upload-signature', verifyToken, requireRole(['conseiller', 'admin']), loadUser, async (req, res) => {
-  try {
-    const timestamp = Math.round(Date.now() / 1000);
-    const folder = 'capitune/community';
-    const signature = cloudinary.utils.api_sign_request(
-      { timestamp, folder },
-      process.env.CLOUDINARY_API_SECRET
-    );
-    res.json({
-      signature,
-      timestamp,
-      apiKey: process.env.CLOUDINARY_API_KEY,
-      cloudName: process.env.CLOUDINARY_CLOUD_NAME,
-      folder
-    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

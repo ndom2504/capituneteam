@@ -55,21 +55,15 @@ export default function Community() {
       let mediaUrl = null;
       let mediaType = null;
 
-      // 1. Upload media directly to Cloudinary (bypasses our server)
+      // 1. Upload media directly to Cloudinary (unsigned upload using preset)
       if (media) {
-        const token = await getToken();
-        const sigRes = await apiFetch('/api/community/upload-signature', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (!sigRes.ok) throw new Error('Impossible de générer la signature d\'upload');
-        const { signature, timestamp, apiKey, cloudName, folder } = await sigRes.json();
+        const cloudName = process.env.VITE_CLOUDINARY_CLOUD_NAME;
+        const uploadPreset = process.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
         const cloudForm = new FormData();
         cloudForm.append('file', media);
-        cloudForm.append('api_key', apiKey);
-        cloudForm.append('timestamp', String(timestamp));
-        cloudForm.append('signature', signature);
-        cloudForm.append('folder', folder);
+        cloudForm.append('upload_preset', uploadPreset);
+        cloudForm.append('folder', 'capitune/community');
 
         // Cloudinary détecte automatiquement le type (image ou video)
         const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
