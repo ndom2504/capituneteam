@@ -35,11 +35,20 @@ CREATE TABLE IF NOT EXISTS tickets (
   dossier_id INTEGER REFERENCES dossiers(id) ON DELETE CASCADE,
   conseiller_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
   service_name VARCHAR(255) NOT NULL,
+  description TEXT,
+  scope TEXT,
+  conditions TEXT,
   price NUMERIC(10, 2) NOT NULL,
   deadline DATE,
-  status VARCHAR(20) CHECK (status IN ('open', 'paid', 'in_progress', 'closed')) DEFAULT 'open',
+  status VARCHAR(30) DEFAULT 'en_attente_paiement',
   created_at TIMESTAMP DEFAULT NOW()
 );
+
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS description TEXT;
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS scope TEXT;
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS conditions TEXT;
+ALTER TABLE tickets ALTER COLUMN status TYPE VARCHAR(30);
+ALTER TABLE tickets ALTER COLUMN status SET DEFAULT 'en_attente_paiement';
 
 CREATE TABLE IF NOT EXISTS messages (
   id SERIAL PRIMARY KEY,
@@ -54,7 +63,12 @@ CREATE TABLE IF NOT EXISTS payments (
   id SERIAL PRIMARY KEY,
   ticket_id INTEGER REFERENCES tickets(id) ON DELETE CASCADE,
   stripe_session_id VARCHAR(255),
+  stripe_payment_intent_id VARCHAR(255),
   amount NUMERIC(10, 2) NOT NULL,
-  status VARCHAR(20) CHECK (status IN ('pending', 'completed', 'failed')) DEFAULT 'pending',
+  status VARCHAR(20) DEFAULT 'initie',
   created_at TIMESTAMP DEFAULT NOW()
 );
+
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS stripe_payment_intent_id VARCHAR(255);
+ALTER TABLE payments ALTER COLUMN status TYPE VARCHAR(20);
+ALTER TABLE payments ALTER COLUMN status SET DEFAULT 'initie';

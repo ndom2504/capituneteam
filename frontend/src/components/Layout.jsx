@@ -6,7 +6,7 @@ import { useState } from 'react';
 const navItems = [
   { path: '/', label: 'Tableau de bord', icon: LayoutDashboard },
   { path: '/dossiers', label: 'Dossiers', icon: FolderOpen },
-  { path: '/tickets', label: 'Tickets', icon: Ticket },
+  { path: '/tickets', label: 'Services', icon: Ticket },
   { path: '/messages', label: 'Messages', icon: MessageSquare },
   { path: '/about', label: 'À propos', icon: Info },
   { path: '/profile', label: 'Profil', icon: User },
@@ -14,6 +14,7 @@ const navItems = [
 
 const conseillerNavItems = [
   { path: '/conseiller', label: 'Tableau de bord', icon: Briefcase },
+  { path: '/tickets', label: 'Paiements', icon: Ticket },
   { path: '/messages', label: 'Messages', icon: MessageSquare },
   { path: '/profile', label: 'Profil', icon: User },
 ];

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
+import { apiFetch } from '../config/api.js';
 import { Link } from 'react-router-dom';
 import { FolderOpen, Ticket, MessageSquare } from 'lucide-react';
 
@@ -13,8 +14,8 @@ export default function Dashboard() {
       const headers = { Authorization: `Bearer ${token}` };
       try {
         const [d, t] = await Promise.all([
-          fetch('/api/dossiers', { headers }).then(r => r.ok ? r.json() : []),
-          fetch('/api/tickets', { headers }).then(r => r.ok ? r.json() : []),
+          apiFetch('/api/dossiers', { headers }).then(r => r.ok ? r.json() : []),
+          apiFetch('/api/tickets', { headers }).then(r => r.ok ? r.json() : []),
         ]);
         setStats({ dossiers: d.length || 0, tickets: t.length || 0, messages: 0 });
       } catch {}
@@ -37,7 +38,7 @@ export default function Dashboard() {
         <Link to="/tickets" className="card-dark hover:border-capitune-white transition">
           <div className="flex items-center gap-3 mb-2">
             <Ticket size={24} />
-            <span className="text-lg font-semibold">Tickets</span>
+            <span className="text-lg font-semibold">Services</span>
           </div>
           <p className="text-capitune-text">{stats.tickets} ticket(s)</p>
         </Link>
