@@ -59,13 +59,8 @@ router.get('/upload-signature', verifyToken, requireRole(['conseiller', 'admin']
   try {
     const timestamp = Math.round(Date.now() / 1000);
     const folder = 'capitune/community';
-    const resourceType = req.query.resource_type || 'auto'; // 'image', 'video', or 'auto'
-    const params = { timestamp, folder };
-    if (resourceType !== 'auto') {
-      params.resource_type = resourceType;
-    }
     const signature = cloudinary.utils.api_sign_request(
-      params,
+      { timestamp, folder },
       process.env.CLOUDINARY_API_SECRET
     );
     res.json({
@@ -73,8 +68,7 @@ router.get('/upload-signature', verifyToken, requireRole(['conseiller', 'admin']
       timestamp,
       apiKey: process.env.CLOUDINARY_API_KEY,
       cloudName: process.env.CLOUDINARY_CLOUD_NAME,
-      folder,
-      resourceType
+      folder
     });
   } catch (err) {
     res.status(500).json({ error: err.message });

@@ -57,16 +57,12 @@ export default function Community() {
 
       // 1. Upload media directly to Cloudinary (bypasses our server)
       if (media) {
-        // Déterminer le type de média (image ou vidéo)
-        const isVideo = media.type.startsWith('video/');
-        const resourceType = isVideo ? 'video' : 'image';
-        
         const token = await getToken();
-        const sigRes = await apiFetch(`/api/community/upload-signature?resource_type=${resourceType}`, {
+        const sigRes = await apiFetch('/api/community/upload-signature', {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (!sigRes.ok) throw new Error('Impossible de générer la signature d\'upload');
-        const { signature, timestamp, apiKey, cloudName, folder, resourceType: resType } = await sigRes.json();
+        const { signature, timestamp, apiKey, cloudName, folder } = await sigRes.json();
 
         const cloudForm = new FormData();
         cloudForm.append('file', media);
@@ -74,17 +70,15 @@ export default function Community() {
         cloudForm.append('timestamp', String(timestamp));
         cloudForm.append('signature', signature);
         cloudForm.append('folder', folder);
-        cloudForm.append('resource_type', resType); // Spécifier le type de ressource
 
-        // Utiliser l'endpoint approprié selon le type (image ou video)
-        const endpoint = isVideo ? 'video' : 'image';
-        const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/${endpoint}/upload`, {
+        // Cloudinary détecte automatiquement le type (image ou video)
+        const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
           method: 'POST',
           body: cloudForm,
         });
         if (!uploadRes.ok) {
           const errData = await uploadRes.json().catch(() => ({}));
-          throw new Error(errData.error?.message || `Erreur lors de l'upload du ${isVideo ? 'vidéo' : 'média'}`);
+          throw new Error(errData.error?.message || 'Erreur lors de l\'upload du média');
         }
         const uploadData = await uploadRes.json();
         mediaUrl = uploadData.secure_url;
