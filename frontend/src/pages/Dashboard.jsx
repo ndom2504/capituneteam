@@ -12,9 +12,12 @@ export default function Dashboard() {
     async function fetchStats() {
       const token = await getToken();
       const headers = { Authorization: `Bearer ${token}` };
+      const dossiersEndpoint = dbUser?.role === 'conseiller' || dbUser?.role === 'admin'
+        ? '/api/dossiers/conseiller/dossiers/all'
+        : '/api/dossiers';
       try {
         const [d, t] = await Promise.all([
-          apiFetch('/api/dossiers', { headers }).then(r => r.ok ? r.json() : []),
+          apiFetch(dossiersEndpoint, { headers }).then(r => r.ok ? r.json() : []),
           apiFetch('/api/tickets', { headers }).then(r => r.ok ? r.json() : []),
         ]);
         setStats({ dossiers: d.length || 0, tickets: t.length || 0, messages: 0 });

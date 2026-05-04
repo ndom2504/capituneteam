@@ -103,19 +103,27 @@ router.post('/:id/envoyer', verifyToken, requireRole(['client']), loadUser, asyn
 });
 
 // GET /api/conseiller/dossiers - List dossiers for conseiller
-router.get('/conseiller/dossiers', verifyToken, requireRole(['conseiller']), loadUser, async (req, res) => {
+router.get('/conseiller/dossiers', verifyToken, requireRole(['conseiller', 'admin']), loadUser, async (req, res) => {
   try {
     if (!req.user.dbUser) {
       return res.status(404).json({ error: 'User not found in database' });
     }
-    const result = await query(
-      `SELECT d.*, u.first_name, u.last_name, u.email, u.profile_photo_url
-       FROM dossiers d
-       JOIN users u ON d.client_id = u.id
-       WHERE d.conseiller_id = $1 AND d.statut = 'envoye'
-       ORDER BY d.created_at DESC`,
-      [req.user.dbUser.id]
-    );
+    const result = req.user.role === 'admin'
+      ? await query(
+          `SELECT d.*, u.first_name, u.last_name, u.email, u.profile_photo_url
+           FROM dossiers d
+           JOIN users u ON d.client_id = u.id
+           WHERE d.statut = 'envoye'
+           ORDER BY d.created_at DESC`
+        )
+      : await query(
+          `SELECT d.*, u.first_name, u.last_name, u.email, u.profile_photo_url
+           FROM dossiers d
+           JOIN users u ON d.client_id = u.id
+           WHERE d.conseiller_id = $1 AND d.statut = 'envoye'
+           ORDER BY d.created_at DESC`,
+          [req.user.dbUser.id]
+        );
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -123,19 +131,26 @@ router.get('/conseiller/dossiers', verifyToken, requireRole(['conseiller']), loa
 });
 
 // GET /api/conseiller/dossiers/all - List all dossiers for conseiller (history)
-router.get('/conseiller/dossiers/all', verifyToken, requireRole(['conseiller']), loadUser, async (req, res) => {
+router.get('/conseiller/dossiers/all', verifyToken, requireRole(['conseiller', 'admin']), loadUser, async (req, res) => {
   try {
     if (!req.user.dbUser) {
       return res.status(404).json({ error: 'User not found in database' });
     }
-    const result = await query(
-      `SELECT d.*, u.first_name, u.last_name, u.email, u.profile_photo_url
-       FROM dossiers d
-       JOIN users u ON d.client_id = u.id
-       WHERE d.conseiller_id = $1
-       ORDER BY d.created_at DESC`,
-      [req.user.dbUser.id]
-    );
+    const result = req.user.role === 'admin'
+      ? await query(
+          `SELECT d.*, u.first_name, u.last_name, u.email, u.profile_photo_url
+           FROM dossiers d
+           JOIN users u ON d.client_id = u.id
+           ORDER BY d.created_at DESC`
+        )
+      : await query(
+          `SELECT d.*, u.first_name, u.last_name, u.email, u.profile_photo_url
+           FROM dossiers d
+           JOIN users u ON d.client_id = u.id
+           WHERE d.conseiller_id = $1
+           ORDER BY d.created_at DESC`,
+          [req.user.dbUser.id]
+        );
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
+import { apiFetch } from '../config/api.js';
 import { useNavigate } from 'react-router-dom';
 import { Plus, FileText, Edit, Trash2 } from 'lucide-react';
 
@@ -16,7 +17,10 @@ export default function Dossiers() {
       setLoading(true);
       try {
         const token = await getToken();
-        const res = await fetch('/api/dossiers', {
+        const endpoint = dbUser?.role === 'conseiller' || dbUser?.role === 'admin'
+          ? '/api/dossiers/conseiller/dossiers/all'
+          : '/api/dossiers';
+        const res = await apiFetch(endpoint, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.ok) setDossiers(await res.json());
@@ -34,7 +38,7 @@ export default function Dossiers() {
     setDeletingId(dossierId);
     try {
       const token = await getToken();
-      const res = await fetch(`/api/dossiers/${dossierId}`, {
+      const res = await apiFetch(`/api/dossiers/${dossierId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -71,14 +75,16 @@ export default function Dossiers() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Mes Dossiers</h2>
-        <button
-          onClick={() => navigate('/dossiers/create')}
-          className="btn-primary flex items-center gap-2"
-        >
-          <Plus size={18} />
-          Nouveau Dossier
-        </button>
+        <h2 className="text-2xl font-bold">{dbUser?.role === 'client' ? 'Mes Dossiers' : 'Dossiers'}</h2>
+        {dbUser?.role === 'client' && (
+          <button
+            onClick={() => navigate('/dossiers/create')}
+            className="btn-primary flex items-center gap-2"
+          >
+            <Plus size={18} />
+            Nouveau Dossier
+          </button>
+        )}
       </div>
 
       {loading ? (
@@ -89,12 +95,14 @@ export default function Dossiers() {
         <div className="card-dark text-center py-8">
           <FileText size={48} className="text-capitune-text mx-auto mb-4" />
           <p className="text-capitune-text">Aucun dossier</p>
-          <button
-            onClick={() => navigate('/dossiers/create')}
-            className="btn-primary mt-4"
-          >
-            Créer un dossier
-          </button>
+          {dbUser?.role === 'client' && (
+            <button
+              onClick={() => navigate('/dossiers/create')}
+              className="btn-primary mt-4"
+            >
+              Créer un dossier
+            </button>
+          )}
         </div>
       ) : (
         <div className="space-y-4">
