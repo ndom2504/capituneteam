@@ -1,7 +1,52 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
-import { Send, Paperclip, FileText } from 'lucide-react';
+import { Send, Paperclip, FileText, Download } from 'lucide-react';
+
+function FileAttachment({ url, isMine }) {
+  if (!url) return null;
+  // Old base64 format - can't open
+  if (url.startsWith('data:')) {
+    return <p className="text-xs italic opacity-60 mt-1">📎 Fichier (ancien format, non disponible)</p>;
+  }
+  const isPdf = url.includes('.pdf') || (url.includes('cloudinary') && url.includes('/image/upload/'));
+  const isImage = /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(url);
+  const fileName = url.split('/').pop().split('?')[0] || 'Fichier';
+
+  if (isImage) {
+    return (
+      <a href={url} target="_blank" rel="noreferrer">
+        <img src={url} alt="Image" className="w-full max-h-48 object-cover rounded mt-2 cursor-pointer" />
+      </a>
+    );
+  }
+
+  if (isPdf && url.includes('cloudinary')) {
+    const previewUrl = url.replace('/upload/', '/upload/f_jpg,q_auto,w_400,h_500,c_pad/');
+    return (
+      <div className="mt-2 space-y-1">
+        <img
+          src={previewUrl}
+          alt="Aperçu PDF"
+          className="w-full h-40 object-cover rounded cursor-pointer border border-white/10"
+          onClick={() => window.open(url, '_blank')}
+          onError={(e) => { e.target.style.display = 'none'; }}
+        />
+        <a href={url} target="_blank" rel="noreferrer" download
+          className={`inline-flex items-center gap-1 text-xs underline ${isMine ? 'text-blue-600' : 'text-blue-300'}`}>
+          <Download size={12} /> Télécharger le PDF
+        </a>
+      </div>
+    );
+  }
+
+  return (
+    <a href={url} target="_blank" rel="noreferrer" download
+      className={`inline-flex items-center gap-1 text-xs underline mt-1 ${isMine ? 'text-blue-600' : 'text-blue-300'}`}>
+      <Download size={12} /> {fileName}
+    </a>
+  );
+}
 
 export default function Messages() {
   const { dossierId } = useParams();
@@ -111,31 +156,7 @@ export default function Messages() {
                 <div className={`rounded-xl px-4 py-2 text-sm ${m.sender_id === dbUser?.id ? 'bg-capitune-white text-capitune-black' : 'bg-capitune-gray text-capitune-white'}`}>
                   <p className="text-xs opacity-70 mb-1">{m.sender_name}</p>
                   {m.content && <p>{m.content}</p>}
-                  {m.file_url && (
-                    <div className="mt-2 space-y-2">
-                      {m.file_url.includes('.pdf') ? (
-                        <div>
-                          <img
-                            src={m.file_url.replace('/upload/', '/upload/f_jpg,q_auto,w_300,h_400,c_pad/')}
-                            alt="Aperçu du fichier"
-                            className="w-full h-40 object-cover rounded cursor-pointer"
-                            onClick={() => window.open(m.file_url, '_blank')}
-                            onError={(e) => {
-                              e.target.style.display = 'none';
-                              e.target.nextElementSibling.style.display = 'block';
-                            }}
-                          />
-                          <a href={m.file_url} target="_blank" rel="noreferrer" className="underline text-xs block mt-1 hidden">
-                            📎 Fichier PDF
-                          </a>
-                        </div>
-                      ) : (
-                        <a href={m.file_url} target="_blank" rel="noreferrer" className="underline text-xs block mt-1">
-                          📎 Fichier
-                        </a>
-                      )}
-                    </div>
-                  )}
+                  <FileAttachment url={m.file_url} isMine={m.sender_id === dbUser?.id} />
                 </div>
                 <p className="text-[10px] text-capitune-text mt-1">{new Date(m.created_at).toLocaleString('fr-CA')}</p>
               </div>
