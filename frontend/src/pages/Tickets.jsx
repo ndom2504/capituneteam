@@ -25,7 +25,44 @@ export default function Tickets() {
     'Préparation dossier permis d’étude',
     'Accompagnement opportunité d’affaires',
     'Consultation personnalisée',
-    'Montage de dossier complet'
+    'Montage de dossier complet',
+    'Bâtir un profil professionnel',
+    'Recherche d’opportunité d’affaires',
+    'Recherche d’établissement et procédure d’admission',
+    'Préparation du plan d’affaires',
+    'Optimisation du profil Entrée Express',
+    'Accompagnement choix de programme d’études',
+    'Accompagnement stratégique en immigration',
+    'Révision et structuration des documents',
+    'Suivi personnalisé jusqu’au dépôt'
+  ];
+
+  const scopeOptions = [
+    'Analyse du profil et des objectifs du client',
+    'Évaluation de l’admissibilité selon le programme visé',
+    'Bâtir ou optimiser le profil professionnel',
+    'Sélection des programmes adaptés au dossier',
+    'Recherche d’opportunités d’affaires pertinentes',
+    'Recherche d’établissements et programmes d’études',
+    'Procédure d’admission auprès des établissements',
+    'Préparation et structuration du plan d’affaires',
+    'Préparation de la stratégie documentaire',
+    'Montage complet du dossier',
+    'Révision des formulaires et pièces justificatives',
+    'Préparation aux prochaines étapes après paiement'
+  ];
+
+  const conditionOptions = [
+    'Le service démarre après confirmation du paiement Stripe',
+    'Le client doit fournir tous les documents demandés',
+    'Le délai commence après réception des informations complètes',
+    'Le conseiller fournit une analyse écrite et des recommandations',
+    'Le conseiller fournit une liste claire des documents requis',
+    'Le conseiller accompagne le client jusqu’à la soumission prévue',
+    'Les frais gouvernementaux ou frais d’établissement ne sont pas inclus',
+    'Les délais externes dépendent des institutions ou autorités concernées',
+    'Toute modification majeure du périmètre peut nécessiter une nouvelle requête',
+    'Les échanges et fichiers se font via la messagerie CAPITUNE'
   ];
 
   const statusLabel = {
@@ -95,7 +132,15 @@ export default function Tickets() {
             {serviceTypes.map(type => <option key={type} value={type}>{type}</option>)}
           </select>
           <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Description claire du service" className="input-dark w-full min-h-24" required />
+          <select value={form.scope} onChange={e => setForm({ ...form, scope: e.target.value })} className="input-dark w-full">
+            <option value="">Périmètre de l’intervention - choisir un modèle</option>
+            {scopeOptions.map(option => <option key={option} value={option}>{option}</option>)}
+          </select>
           <textarea value={form.scope} onChange={e => setForm({ ...form, scope: e.target.value })} placeholder="Périmètre de l’intervention" className="input-dark w-full min-h-20" />
+          <select value={form.conditions} onChange={e => setForm({ ...form, conditions: e.target.value })} className="input-dark w-full">
+            <option value="">Conditions et livrables - choisir un modèle</option>
+            {conditionOptions.map(option => <option key={option} value={option}>{option}</option>)}
+          </select>
           <textarea value={form.conditions} onChange={e => setForm({ ...form, conditions: e.target.value })} placeholder="Conditions et livrables" className="input-dark w-full min-h-20" />
           <input type="number" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} placeholder="Prix (CAD)" className="input-dark w-full" required />
           <input type="date" value={form.deadline} onChange={e => setForm({ ...form, deadline: e.target.value })} className="input-dark w-full" required />
