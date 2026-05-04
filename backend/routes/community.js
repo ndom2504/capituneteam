@@ -1,13 +1,8 @@
 import { Router } from 'express';
-import multer from 'multer';
 import cloudinary from '../config/cloudinary.js';
 import { query } from '../config/db.js';
 import { verifyToken, requireRole, loadUser } from '../middleware/auth.js';
 
-const upload = multer({ 
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 50 * 1024 * 1024 } // 50MB
-});
 const router = Router();
 
 async function ensureCommunityTables() {
@@ -60,46 +55,45 @@ router.get('/', verifyToken, loadUser, async (req, res) => {
   }
 });
 
-router.post('/', verifyToken, requireRole(['conseiller', 'admin']), loadUser, upload.single('media'), async (req, res) => {
+router.get('/upload-signature', verifyToken, requireRole(['conseiller', 'admin']), loadUser, async (req, res) => {
+  try {
+    const timestamp = Math.round(Date.now() / 1000);
+    const folder = 'capitune/community';
+    const resourceType = req.query.resource_type || 'auto'; // 'image', 'video', or 'auto'
+    const params = { timestamp, folder };
+    if (resourceType !== 'auto') {
+      params.resource_type = resourceType;
+    }
+    const signature = cloudinary.utils.api_sign_request(
+      params,
+      process.env.CLOUDINARY_API_SECRET
+    );
+    res.json({
+      signature,
+      timestamp,
+      apiKey: process.env.CLOUDINARY_API_KEY,
+      cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+      folder,
+      resourceType
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/', verifyToken, requireRole(['conseiller', 'admin']), loadUser, async (req, res) => {
   try {
     await ensureCommunityTables();
-    const { title, content } = req.body;
-    let mediaUrl = null;
-    let mediaType = null;
+    const { title, content, media_url: mediaUrl, media_type: mediaType } = req.body;
 
-    if (req.file) {
-      const isVideo = req.file.mimetype.startsWith('video/');
-      const result = await new Promise((resolve, reject) => {
-        const uploadOptions = {
-          folder: 'capitune/community',
-          resource_type: isVideo ? 'video' : 'image',
-          allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'mov', 'webm'],
-          timeout: 120000,
-        };
-        if (isVideo) {
-          uploadOptions.chunk_size = 6000000;
-          uploadOptions.eager = [{ streaming_profile: 'full' }];
-        }
-        cloudinary.uploader.upload_stream(
-          uploadOptions,
-          (error, uploadResult) => {
-            if (error) reject(error);
-            else resolve(uploadResult);
-          }
-        ).end(req.file.buffer);
-      });
-      mediaUrl = result.secure_url;
-      mediaType = isVideo ? 'video' : 'image';
-    }
-
-    if (!title && !content && !mediaUrl) {
+    if (!title?.trim() && !content?.trim() && !mediaUrl?.trim()) {
       return res.status(400).json({ error: 'Ajoutez un titre, un texte ou un média' });
     }
 
     const result = await query(
       `INSERT INTO community_posts (author_id, title, content, media_url, media_type, created_at)
        VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING *`,
-      [req.user.dbUser.id, title || '', content || '', mediaUrl, mediaType]
+      [req.user.dbUser.id, title || '', content || '', mediaUrl || null, mediaType || null]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {

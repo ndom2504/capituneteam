@@ -52,15 +52,56 @@ export default function Community() {
     setLoading(true);
     setMessage('');
     try {
+      let mediaUrl = null;
+      let mediaType = null;
+
+      // 1. Upload media directly to Cloudinary (bypasses our server)
+      if (media) {
+        // Déterminer le type de média (image ou vidéo)
+        const isVideo = media.type.startsWith('video/');
+        const resourceType = isVideo ? 'video' : 'image';
+        
+        const token = await getToken();
+        const sigRes = await apiFetch(`/api/community/upload-signature?resource_type=${resourceType}`, {
+          headers: { Authorization: `Bearer ${token}` }`
+        });
+        if (!sigRes.ok) throw new Error('Impossible de générer la signature d\'upload');
+        const { signature, timestamp, apiKey, cloudName, folder, resourceType: resType } = await sigRes.json();
+
+        const cloudForm = new FormData();
+        cloudForm.append('file', media);
+        cloudForm.append('api_key', apiKey);
+        cloudForm.append('timestamp', String(timestamp));
+        cloudForm.append('signature', signature);
+        cloudForm.append('folder', folder);
+        cloudForm.append('resource_type', resType); // Spécifier le type de ressource
+
+        // Utiliser l'endpoint approprié selon le type (image ou video)
+        const endpoint = isVideo ? 'video' : 'image';
+        const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/${endpoint}/upload`, {
+          method: 'POST',
+          body: cloudForm,
+        });
+        if (!uploadRes.ok) {
+          const errData = await uploadRes.json().catch(() => ({}));
+          throw new Error(errData.error?.message || `Erreur lors de l'upload du ${isVideo ? 'vidéo' : 'média'}`);
+        }
+        const uploadData = await uploadRes.json();
+        mediaUrl = uploadData.secure_url;
+        mediaType = uploadData.resource_type; // 'image' or 'video'
+      }
+
+      // 2. Create post with media URL
       const token = await getToken();
-      const payload = new FormData();
-      payload.append('title', form.title);
-      payload.append('content', form.content);
-      if (media) payload.append('media', media);
       const res = await apiFetch('/api/community', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: payload,
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: form.title,
+          content: form.content,
+          media_url: mediaUrl,
+          media_type: mediaType,
+        }),
       });
       if (!res.ok) {
         const data = await res.json();
