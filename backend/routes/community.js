@@ -70,12 +70,18 @@ router.post('/', verifyToken, requireRole(['conseiller', 'admin']), loadUser, up
     if (req.file) {
       const isVideo = req.file.mimetype.startsWith('video/');
       const result = await new Promise((resolve, reject) => {
+        const uploadOptions = {
+          folder: 'capitune/community',
+          resource_type: isVideo ? 'video' : 'image',
+          allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'mov', 'webm'],
+          timeout: 120000,
+        };
+        if (isVideo) {
+          uploadOptions.chunk_size = 6000000;
+          uploadOptions.eager = [{ streaming_profile: 'full' }];
+        }
         cloudinary.uploader.upload_stream(
-          {
-            folder: 'capitune/community',
-            resource_type: isVideo ? 'video' : 'image',
-            allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'mov', 'webm']
-          },
+          uploadOptions,
           (error, uploadResult) => {
             if (error) reject(error);
             else resolve(uploadResult);
