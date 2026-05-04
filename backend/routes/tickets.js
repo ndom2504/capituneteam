@@ -87,6 +87,10 @@ router.get('/:id', verifyToken, loadUser, async (req, res) => {
 
 router.post('/', verifyToken, requireRole(['conseiller', 'admin']), loadUser, async (req, res) => {
   try {
+    await query("ALTER TABLE tickets ALTER COLUMN status TYPE VARCHAR(30)");
+    await query("ALTER TABLE tickets ALTER COLUMN status SET DEFAULT 'en_attente_paiement'");
+    await query("ALTER TABLE tickets DROP CONSTRAINT IF EXISTS tickets_status_check");
+    await query("ALTER TABLE tickets ADD CONSTRAINT tickets_status_check CHECK (status IN ('en_attente_paiement', 'payee', 'en_cours', 'termine'))");
     if (!req.user.dbUser) {
       return res.status(404).json({ error: 'User not found in database' });
     }
