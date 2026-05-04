@@ -89,6 +89,8 @@ router.post('/:dossierId', verifyToken, loadUser, upload.single('file'), async (
             folder: 'capitune/messages',
             resource_type: 'auto',
             public_id: `${dossierId}_${Date.now()}`,
+            sign_url: false,
+            allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'docx', 'doc'],
           },
           (error, result) => {
             if (error) reject(error);

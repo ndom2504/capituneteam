@@ -21,6 +21,8 @@ router.post('/', verifyToken, requireRole(['client']), loadUser, upload.single('
           {
             folder: 'capitune/dossiers',
             resource_type: 'auto',
+            sign_url: false,
+            allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'docx', 'doc'],
           },
           (error, result) => {
             if (error) reject(error);
@@ -198,6 +200,8 @@ router.put('/:id', verifyToken, requireRole(['client']), loadUser, upload.single
           {
             folder: 'capitune/dossiers',
             resource_type: 'auto',
+            sign_url: false,
+            allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'docx', 'doc'],
           },
           (error, result) => {
             if (error) reject(error);
