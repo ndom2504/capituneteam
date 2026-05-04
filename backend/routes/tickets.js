@@ -4,6 +4,29 @@ import { verifyToken, requireRole, loadUser } from '../middleware/auth.js';
 
 const router = Router();
 
+router.post('/migrate', verifyToken, requireRole(['admin']), loadUser, async (req, res) => {
+  try {
+    await query('ALTER TABLE tickets ADD COLUMN IF NOT EXISTS description TEXT');
+    await query('ALTER TABLE tickets ADD COLUMN IF NOT EXISTS scope TEXT');
+    await query('ALTER TABLE tickets ADD COLUMN IF NOT EXISTS conditions TEXT');
+    await query('ALTER TABLE tickets ALTER COLUMN status TYPE VARCHAR(30)');
+    await query("ALTER TABLE tickets ALTER COLUMN status SET DEFAULT 'en_attente_paiement'");
+    await query("UPDATE tickets SET status = 'en_attente_paiement' WHERE status = 'open'");
+    await query("UPDATE tickets SET status = 'payee' WHERE status = 'paid'");
+    await query("UPDATE tickets SET status = 'en_cours' WHERE status = 'in_progress'");
+    await query("UPDATE tickets SET status = 'termine' WHERE status = 'closed'");
+    await query('ALTER TABLE payments ADD COLUMN IF NOT EXISTS stripe_payment_intent_id VARCHAR(255)');
+    await query('ALTER TABLE payments ALTER COLUMN status TYPE VARCHAR(20)');
+    await query("ALTER TABLE payments ALTER COLUMN status SET DEFAULT 'initie'");
+    await query("UPDATE payments SET status = 'initie' WHERE status = 'pending'");
+    await query("UPDATE payments SET status = 'reussi' WHERE status = 'completed'");
+    await query("UPDATE payments SET status = 'echec' WHERE status = 'failed'");
+    res.json({ ok: true, message: 'Migration tickets/payments terminée' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.get('/', verifyToken, loadUser, async (req, res) => {
   try {
     if (!req.user.dbUser) {
