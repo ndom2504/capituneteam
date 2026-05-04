@@ -57,8 +57,12 @@ export default function Community() {
 
       // 1. Upload media directly to Cloudinary (unsigned upload using preset)
       if (media) {
-        const cloudName = process.env.VITE_CLOUDINARY_CLOUD_NAME;
-        const uploadPreset = process.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+        const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+        const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+
+        if (!cloudName || !uploadPreset) {
+          throw new Error('Variables d\'environnement Cloudinary non configurées');
+        }
 
         const cloudForm = new FormData();
         cloudForm.append('file', media);
