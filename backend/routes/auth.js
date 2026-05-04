@@ -10,13 +10,18 @@ router.post('/register', verifyToken, async (req, res) => {
     const { displayName, role = 'client' } = req.body;
     const uid = req.user.uid;
     const email = req.user.email?.toLowerCase();
-    const assignedRole = ADMIN_EMAILS.includes(email) ? 'admin' : role;
+    const requestedRole = ['client', 'conseiller'].includes(role) ? role : 'client';
+    const assignedRole = ADMIN_EMAILS.includes(email) ? 'admin' : requestedRole;
 
     // Upsert: return existing user if already registered
     const existing = await query('SELECT * FROM users WHERE firebase_uid = $1', [uid]);
     if (existing.rows.length) {
       if (ADMIN_EMAILS.includes(email) && existing.rows[0].role !== 'admin') {
         const updated = await query('UPDATE users SET role = $1 WHERE firebase_uid = $2 RETURNING *', ['admin', uid]);
+        return res.json(updated.rows[0]);
+      }
+      if (!ADMIN_EMAILS.includes(email) && existing.rows[0].role !== assignedRole) {
+        const updated = await query('UPDATE users SET role = $1 WHERE firebase_uid = $2 RETURNING *', [assignedRole, uid]);
         return res.json(updated.rows[0]);
       }
       return res.json(existing.rows[0]);
