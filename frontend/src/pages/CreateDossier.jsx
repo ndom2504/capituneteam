@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
+import { apiFetch } from '../config/api.js';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FileText, Send, ArrowLeft, Upload } from 'lucide-react';
 
@@ -33,7 +34,7 @@ export default function CreateDossier() {
     async function fetchConseillers() {
       try {
         const token = await getToken();
-        const res = await fetch('/api/users/conseillers', {
+        const res = await apiFetch('/api/users/conseillers', {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.ok) {
@@ -56,7 +57,7 @@ export default function CreateDossier() {
       setLoading(true);
       try {
         const token = await getToken();
-        const res = await fetch(`/api/dossiers/${id}`, {
+        const res = await apiFetch(`/api/dossiers/${id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.ok) {
@@ -106,7 +107,7 @@ export default function CreateDossier() {
       const url = isEditing ? `/api/dossiers/${id}` : '/api/dossiers';
       const method = isEditing ? 'PUT' : 'POST';
 
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method,
         headers: {
           Authorization: `Bearer ${token}`,
@@ -145,7 +146,7 @@ export default function CreateDossier() {
     try {
       const token = await getToken();
       console.log('Sending dossier:', newDossierId, 'to conseiller:', selectedConseiller);
-      const response = await fetch(`/api/dossiers/${newDossierId}/envoyer`, {
+      const response = await apiFetch(`/api/dossiers/${newDossierId}/envoyer`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -177,8 +178,81 @@ export default function CreateDossier() {
   const programmeOptions = [
     { value: 'entree_express', label: 'Entrée Express' },
     { value: 'permis_etude', label: 'Permis d\'Études' },
-    { value: 'affaires', label: 'Affaires' },
+    { value: 'affaires', label: 'Plan d\'affaires' },
   ];
+
+  const commonFields = [
+    { name: 'nom', label: 'Nom', type: 'text', required: true },
+    { name: 'prenom', label: 'Prénom', type: 'text', required: true },
+    { name: 'date_naissance', label: 'Date de naissance', type: 'date', required: true },
+    { name: 'nationalite', label: 'Nationalité', type: 'text', required: true },
+    {
+      name: 'situation_familiale',
+      label: 'Situation familiale',
+      type: 'select',
+      required: true,
+      options: [
+        ['celibataire', 'Célibataire'],
+        ['marie', 'Marié(e)'],
+        ['divorce', 'Divorcé(e)'],
+        ['veuf', 'Veuf/Veuve'],
+      ],
+    },
+    { name: 'pays_residence', label: 'Pays de résidence actuel', type: 'text', required: true },
+    { name: 'telephone', label: 'Téléphone', type: 'text' },
+  ];
+
+  const programmeFields = {
+    entree_express: [
+      { name: 'niveau_etudes', label: 'Niveau d’études le plus élevé', type: 'text', required: true },
+      { name: 'domaine_etudes', label: 'Domaine d’études', type: 'text', required: true },
+      { name: 'metier', label: 'Profession / métier principal', type: 'text', required: true },
+      { name: 'annees_experience', label: 'Années d’expérience qualifiée', type: 'number', required: true },
+      { name: 'niveau_francais', label: 'Niveau de français', type: 'select', options: [['debutant', 'Débutant'], ['intermediaire', 'Intermédiaire'], ['avance', 'Avancé'], ['test_officiel', 'Test officiel disponible']] },
+      { name: 'niveau_anglais', label: 'Niveau d’anglais', type: 'select', options: [['debutant', 'Débutant'], ['intermediaire', 'Intermédiaire'], ['avance', 'Avancé'], ['test_officiel', 'Test officiel disponible']] },
+      { name: 'offre_emploi', label: 'Avez-vous une offre d’emploi au Canada ?', type: 'select', options: [['oui', 'Oui'], ['non', 'Non']] },
+      { name: 'motivation', label: 'Objectif d’immigration et résumé du profil', type: 'textarea', required: true },
+    ],
+    permis_etude: [
+      { name: 'niveau_etudes', label: 'Dernier niveau d’études complété', type: 'text', required: true },
+      { name: 'domaine_etudes', label: 'Domaine d’études actuel ou souhaité', type: 'text', required: true },
+      { name: 'programme_souhaite', label: 'Programme souhaité au Canada', type: 'text', required: true },
+      { name: 'niveau_souhaite', label: 'Niveau souhaité', type: 'select', options: [['college', 'Collège'], ['baccalaureat', 'Baccalauréat'], ['maitrise', 'Maîtrise'], ['doctorat', 'Doctorat'], ['formation_professionnelle', 'Formation professionnelle']] },
+      { name: 'province_souhaitee', label: 'Province ou ville souhaitée', type: 'text' },
+      { name: 'budget_etudes', label: 'Budget estimé pour les études', type: 'text' },
+      { name: 'garant_financier', label: 'Garant financier disponible ?', type: 'select', options: [['oui', 'Oui'], ['non', 'Non'], ['a_confirmer', 'À confirmer']] },
+      { name: 'motivation', label: 'Motivation pour le projet d’études', type: 'textarea', required: true },
+    ],
+    affaires: [
+      { name: 'secteur_activite', label: 'Secteur d’activité du projet', type: 'text', required: true },
+      { name: 'experience_affaires', label: 'Expérience en affaires / gestion', type: 'textarea', required: true },
+      { name: 'description_projet', label: 'Description du projet d’affaires', type: 'textarea', required: true },
+      { name: 'montant_investissement', label: 'Montant d’investissement prévu', type: 'text', required: true },
+      { name: 'province_implantation', label: 'Province ou marché visé', type: 'text' },
+      { name: 'etat_plan_affaires', label: 'État du plan d’affaires', type: 'select', options: [['idee', 'Idée initiale'], ['brouillon', 'Brouillon existant'], ['avance', 'Plan avancé'], ['aucun', 'Aucun document']] },
+      { name: 'besoin_accompagnement', label: 'Besoin principal d’accompagnement', type: 'select', options: [['profil_professionnel', 'Bâtir un profil professionnel'], ['opportunites', 'Recherche d’opportunités d’affaires'], ['plan_affaires', 'Préparation du plan d’affaires'], ['strategie', 'Stratégie complète']] },
+      { name: 'motivation', label: 'Objectifs et attentes', type: 'textarea', required: true },
+    ],
+  };
+
+  const renderField = (field) => {
+    if (field.type === 'select') {
+      return (
+        <select name={field.name} value={formData[field.name] || ''} onChange={handleInputChange} className="input-dark w-full" disabled={loading} required={field.required}>
+          <option value="">Sélectionner</option>
+          {field.options.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+        </select>
+      );
+    }
+    if (field.type === 'textarea') {
+      return (
+        <textarea name={field.name} value={formData[field.name] || ''} onChange={handleInputChange} className="input-dark w-full" rows={4} disabled={loading} required={field.required} />
+      );
+    }
+    return (
+      <input type={field.type} name={field.name} value={formData[field.name] || ''} onChange={handleInputChange} className="input-dark w-full" disabled={loading} required={field.required} min={field.type === 'number' ? '0' : undefined} />
+    );
+  };
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -218,166 +292,31 @@ export default function CreateDossier() {
           </select>
         </div>
 
-        <form onSubmit={handleCreateDossier} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs text-capitune-text uppercase mb-2">Nom</label>
-              <input
-                type="text"
-                name="nom"
-                value={formData.nom}
-                onChange={handleInputChange}
-                className="input-dark w-full"
-                disabled={loading}
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-capitune-text uppercase mb-2">Prénom</label>
-              <input
-                type="text"
-                name="prenom"
-                value={formData.prenom}
-                onChange={handleInputChange}
-                className="input-dark w-full"
-                disabled={loading}
-                required
-              />
+        <form onSubmit={handleCreateDossier} className="space-y-6">
+          <div>
+            <h3 className="font-semibold mb-3">Informations personnelles</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {commonFields.map((field) => (
+                <div key={field.name} className={field.type === 'textarea' ? 'md:col-span-2' : ''}>
+                  <label className="block text-xs text-capitune-text uppercase mb-2">{field.label}</label>
+                  {renderField(field)}
+                </div>
+              ))}
             </div>
           </div>
 
           <div>
-            <label className="block text-xs text-capitune-text uppercase mb-2">Date de naissance</label>
-            <input
-              type="date"
-              name="date_naissance"
-              value={formData.date_naissance}
-              onChange={handleInputChange}
-              className="input-dark w-full"
-              disabled={loading}
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs text-capitune-text uppercase mb-2">Nationalité</label>
-            <input
-              type="text"
-              name="nationalite"
-              value={formData.nationalite}
-              onChange={handleInputChange}
-              className="input-dark w-full"
-              disabled={loading}
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs text-capitune-text uppercase mb-2">Situation familiale</label>
-            <select
-              name="situation_familiale"
-              value={formData.situation_familiale}
-              onChange={handleInputChange}
-              className="input-dark w-full"
-              disabled={loading}
-              required
-            >
-              <option value="">Sélectionner</option>
-              <option value="celibataire">Célibataire</option>
-              <option value="marie">Marié(e)</option>
-              <option value="divorce">Divorcé(e)</option>
-              <option value="veuf">Veuf/Veuve</option>
-            </select>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs text-capitune-text uppercase mb-2">Niveau d'études</label>
-              <input
-                type="text"
-                name="niveau_etudes"
-                value={formData.niveau_etudes}
-                onChange={handleInputChange}
-                className="input-dark w-full"
-                disabled={loading}
-                required
-              />
+            <h3 className="font-semibold mb-3">
+              Détails du projet - {programmeOptions.find(option => option.value === programme)?.label}
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {(programmeFields[programme] || []).map((field) => (
+                <div key={field.name} className={field.type === 'textarea' ? 'md:col-span-2' : ''}>
+                  <label className="block text-xs text-capitune-text uppercase mb-2">{field.label}</label>
+                  {renderField(field)}
+                </div>
+              ))}
             </div>
-            <div>
-              <label className="block text-xs text-capitune-text uppercase mb-2">Domaine d'études</label>
-              <select
-                name="domaine_etudes"
-                value={formData.domaine_etudes}
-                onChange={handleInputChange}
-                className="input-dark w-full"
-                disabled={loading}
-                required
-              >
-                <option value="">Sélectionner</option>
-                <option value="informatique">Informatique</option>
-                <option value="ingenierie">Ingénierie</option>
-                <option value="sante">Santé</option>
-                <option value="business">Business</option>
-                <option value="droit">Droit</option>
-                <option value="education">Éducation</option>
-                <option value="arts">Arts</option>
-                <option value="sciences">Sciences</option>
-                <option value="autre">Autre</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs text-capitune-text uppercase mb-2">Métier</label>
-              <select
-                name="metier"
-                value={formData.metier}
-                onChange={handleInputChange}
-                className="input-dark w-full"
-                disabled={loading}
-                required
-              >
-                <option value="">Sélectionner</option>
-                <option value="developpeur">Développeur</option>
-                <option value="ingenieur">Ingénieur</option>
-                <option value="medecin">Médecin</option>
-                <option value="infirmier">Infirmier</option>
-                <option value="enseignant">Enseignant</option>
-                <option value="comptable">Comptable</option>
-                <option value="avocat">Avocat</option>
-                <option value="gestionnaire">Gestionnaire</option>
-                <option value="artisan">Artisan</option>
-                <option value="commercial">Commercial</option>
-                <option value="autre">Autre</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs text-capitune-text uppercase mb-2">Années d'expérience</label>
-              <input
-                type="number"
-                name="annees_experience"
-                value={formData.annees_experience}
-                onChange={handleInputChange}
-                className="input-dark w-full"
-                disabled={loading}
-                required
-                min="0"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs text-capitune-text uppercase mb-2">Motivation</label>
-            <textarea
-              name="motivation"
-              value={formData.motivation}
-              onChange={handleInputChange}
-              className="input-dark w-full"
-              rows={4}
-              disabled={loading}
-              required
-            />
           </div>
 
           <div>
