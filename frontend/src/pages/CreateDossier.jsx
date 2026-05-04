@@ -181,11 +181,84 @@ export default function CreateDossier() {
     { value: 'affaires', label: 'Plan d\'affaires' },
   ];
 
+  const nationaliteOptions = [
+    ['canadienne', 'Canadienne'],
+    ['francaise', 'Française'],
+    ['haitienne', 'Haïtienne'],
+    ['marocaine', 'Marocaine'],
+    ['algerienne', 'Algérienne'],
+    ['tunisienne', 'Tunisienne'],
+    ['senegalaise', 'Sénégalaise'],
+    ['ivoirienne', 'Ivoirienne'],
+    ['camerounaise', 'Camerounaise'],
+    ['congolaise', 'Congolaise'],
+    ['beninoise', 'Béninoise'],
+    ['togolaise', 'Togolaise'],
+    ['malienne', 'Malienne'],
+    ['burkinabe', 'Burkinabé'],
+    ['guineenne', 'Guinéenne'],
+    ['autre', 'Autre'],
+  ];
+
+  const niveauEtudesOptions = [
+    ['secondaire', 'Secondaire'],
+    ['professionnel', 'Formation professionnelle'],
+    ['college', 'Collège / Technique'],
+    ['baccalaureat', 'Baccalauréat / Licence'],
+    ['maitrise', 'Maîtrise / Master'],
+    ['doctorat', 'Doctorat'],
+    ['autre', 'Autre'],
+  ];
+
+  const domaineEtudesOptions = [
+    ['informatique', 'Informatique / TI'],
+    ['ingenierie', 'Ingénierie'],
+    ['sante', 'Santé'],
+    ['administration', 'Administration / Gestion'],
+    ['finance', 'Finance / Comptabilité'],
+    ['education', 'Éducation'],
+    ['droit', 'Droit'],
+    ['commerce', 'Commerce / Vente'],
+    ['arts', 'Arts / Design'],
+    ['sciences', 'Sciences'],
+    ['metiers_specialises', 'Métiers spécialisés'],
+    ['autre', 'Autre'],
+  ];
+
+  const metierOptions = [
+    ['developpeur', 'Développeur / Programmeur'],
+    ['ingenieur', 'Ingénieur'],
+    ['technicien', 'Technicien'],
+    ['medecin', 'Médecin'],
+    ['infirmier', 'Infirmier / Infirmière'],
+    ['enseignant', 'Enseignant'],
+    ['comptable', 'Comptable'],
+    ['gestionnaire', 'Gestionnaire'],
+    ['entrepreneur', 'Entrepreneur'],
+    ['cuisinier', 'Cuisinier'],
+    ['electricien', 'Électricien'],
+    ['mecanicien', 'Mécanicien'],
+    ['commercial', 'Commercial / Vente'],
+    ['service_client', 'Service client'],
+    ['autre', 'Autre'],
+  ];
+
+  const anneesExperienceOptions = [
+    ['0', 'Aucune expérience'],
+    ['1', '1 an'],
+    ['2', '2 ans'],
+    ['3', '3 ans'],
+    ['4', '4 ans'],
+    ['5', '5 ans'],
+    ['6_9', '6 à 9 ans'],
+    ['10_plus', '10 ans et plus'],
+  ];
+
   const commonFields = [
     { name: 'nom', label: 'Nom', type: 'text', required: true },
     { name: 'prenom', label: 'Prénom', type: 'text', required: true },
     { name: 'date_naissance', label: 'Date de naissance', type: 'date', required: true },
-    { name: 'nationalite', label: 'Nationalité', type: 'text', required: true },
+    { name: 'nationalite', label: 'Nationalité', type: 'select', required: true, options: nationaliteOptions },
     {
       name: 'situation_familiale',
       label: 'Situation familiale',
@@ -204,18 +277,18 @@ export default function CreateDossier() {
 
   const programmeFields = {
     entree_express: [
-      { name: 'niveau_etudes', label: 'Niveau d’études le plus élevé', type: 'text', required: true },
-      { name: 'domaine_etudes', label: 'Domaine d’études', type: 'text', required: true },
-      { name: 'metier', label: 'Profession / métier principal', type: 'text', required: true },
-      { name: 'annees_experience', label: 'Années d’expérience qualifiée', type: 'number', required: true },
+      { name: 'niveau_etudes', label: 'Niveau d’études le plus élevé', type: 'select', required: true, options: niveauEtudesOptions },
+      { name: 'domaine_etudes', label: 'Domaine d’études', type: 'select', required: true, options: domaineEtudesOptions },
+      { name: 'metier', label: 'Profession / métier principal', type: 'select', required: true, options: metierOptions },
+      { name: 'annees_experience', label: 'Années d’expérience qualifiée', type: 'select', required: true, options: anneesExperienceOptions },
       { name: 'niveau_francais', label: 'Niveau de français', type: 'select', options: [['debutant', 'Débutant'], ['intermediaire', 'Intermédiaire'], ['avance', 'Avancé'], ['test_officiel', 'Test officiel disponible']] },
       { name: 'niveau_anglais', label: 'Niveau d’anglais', type: 'select', options: [['debutant', 'Débutant'], ['intermediaire', 'Intermédiaire'], ['avance', 'Avancé'], ['test_officiel', 'Test officiel disponible']] },
       { name: 'offre_emploi', label: 'Avez-vous une offre d’emploi au Canada ?', type: 'select', options: [['oui', 'Oui'], ['non', 'Non']] },
       { name: 'motivation', label: 'Objectif d’immigration et résumé du profil', type: 'textarea', required: true },
     ],
     permis_etude: [
-      { name: 'niveau_etudes', label: 'Dernier niveau d’études complété', type: 'text', required: true },
-      { name: 'domaine_etudes', label: 'Domaine d’études actuel ou souhaité', type: 'text', required: true },
+      { name: 'niveau_etudes', label: 'Dernier niveau d’études complété', type: 'select', required: true, options: niveauEtudesOptions },
+      { name: 'domaine_etudes', label: 'Domaine d’études actuel ou souhaité', type: 'select', required: true, options: domaineEtudesOptions },
       { name: 'programme_souhaite', label: 'Programme souhaité au Canada', type: 'text', required: true },
       { name: 'niveau_souhaite', label: 'Niveau souhaité', type: 'select', options: [['college', 'Collège'], ['baccalaureat', 'Baccalauréat'], ['maitrise', 'Maîtrise'], ['doctorat', 'Doctorat'], ['formation_professionnelle', 'Formation professionnelle']] },
       { name: 'province_souhaitee', label: 'Province ou ville souhaitée', type: 'text' },
