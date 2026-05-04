@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
+import { apiFetch } from '../config/api.js';
 import { User, Camera, Save } from 'lucide-react';
 
 export default function Profile() {
-  const { dbUser, logout, getToken } = useAuth();
+  const { dbUser, logout, getToken, refreshUser } = useAuth();
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState({
     first_name: '',
@@ -50,7 +51,7 @@ export default function Profile() {
       const formData = new FormData();
       formData.append('photo', photoFile);
 
-      const response = await fetch('/api/users/upload-photo', {
+      const response = await apiFetch('/api/users/upload-photo', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -89,7 +90,7 @@ export default function Profile() {
 
       // Update profile without photo URL
       const token = await getToken();
-      const response = await fetch('/api/users/profile', {
+      const response = await apiFetch('/api/users/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -102,12 +103,11 @@ export default function Profile() {
       });
 
       if (response.ok) {
-        const updatedUser = await response.json();
+        await response.json();
         setMessage('Profil mis à jour avec succès');
         setEditing(false);
         setPhotoFile(null);
-        // Reload user data
-        window.location.reload();
+        await refreshUser();
       } else {
         setMessage('Erreur lors de la mise à jour du profil');
       }

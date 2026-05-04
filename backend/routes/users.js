@@ -11,7 +11,7 @@ const router = Router();
 
 router.get('/', verifyToken, requireRole(['admin']), async (req, res) => {
   try {
-    const result = await query('SELECT id, email, display_name, role, created_at FROM users ORDER BY created_at DESC');
+    const result = await query('SELECT id, email, display_name, first_name, last_name, role, created_at FROM users ORDER BY created_at DESC');
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -20,7 +20,7 @@ router.get('/', verifyToken, requireRole(['admin']), async (req, res) => {
 
 router.get('/conseillers', verifyToken, loadUser, async (req, res) => {
   try {
-    const result = await query('SELECT id, email, display_name FROM users WHERE role = $1', ['conseiller']);
+    const result = await query('SELECT id, email, display_name, first_name, last_name FROM users WHERE role = $1', ['conseiller']);
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });

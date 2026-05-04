@@ -31,6 +31,9 @@ export default function Layout({ children }) {
   };
 
   const currentNavItems = dbUser?.role === 'conseiller' ? conseillerNavItems : navItems;
+  const userDisplayName = dbUser?.first_name || dbUser?.last_name
+    ? `${dbUser?.first_name || ''} ${dbUser?.last_name || ''}`.trim()
+    : dbUser?.display_name || dbUser?.email;
 
   return (
     <div className="min-h-screen flex">
@@ -60,7 +63,7 @@ export default function Layout({ children }) {
         <div className="p-4 border-t border-capitune-border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-capitune-white">{dbUser?.display_name}</p>
+              <p className="text-sm font-medium text-capitune-white">{userDisplayName}</p>
               <p className="text-xs text-capitune-text capitalize">{dbUser?.role}</p>
             </div>
             <button onClick={handleLogout} className="text-capitune-text hover:text-capitune-white transition">

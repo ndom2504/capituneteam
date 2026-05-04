@@ -415,7 +415,9 @@ export default function CreateDossier() {
                 <option value="">Sélectionner un conseiller</option>
                 {conseillers.map((conseiller) => (
                   <option key={conseiller.id} value={conseiller.id}>
-                    {conseiller.display_name || conseiller.email}
+                    {conseiller.first_name || conseiller.last_name
+                      ? `${conseiller.first_name || ''} ${conseiller.last_name || ''}`.trim()
+                      : conseiller.display_name || conseiller.email}
                   </option>
                 ))}
               </select>

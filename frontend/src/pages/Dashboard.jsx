@@ -9,6 +9,9 @@ export default function Dashboard() {
   const [stats, setStats] = useState({ dossiers: 0, tickets: 0, messages: 0 });
   const [migrationStatus, setMigrationStatus] = useState('');
   const [migrationLoading, setMigrationLoading] = useState(false);
+  const userDisplayName = dbUser?.first_name || dbUser?.last_name
+    ? `${dbUser?.first_name || ''} ${dbUser?.last_name || ''}`.trim()
+    : dbUser?.display_name || dbUser?.email;
 
   useEffect(() => {
     async function fetchStats() {
@@ -49,7 +52,7 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Tableau de bord</h2>
-      <p className="text-capitune-text">Bienvenue, {dbUser?.display_name}.</p>
+      <p className="text-capitune-text">Bienvenue, {userDisplayName}.</p>
       {dbUser?.role === 'admin' && (
         <div className="card-dark border-yellow-700/60">
           <h3 className="font-semibold text-yellow-300 mb-2">Migration base de données</h3>

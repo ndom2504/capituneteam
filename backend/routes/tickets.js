@@ -33,7 +33,8 @@ router.get('/', verifyToken, loadUser, async (req, res) => {
       return res.status(404).json({ error: 'User not found in database' });
     }
     let sql = `SELECT t.*, d.data, d.programme, d.statut as dossier_statut, d.client_id, d.conseiller_id as dossier_conseiller_id,
-               u.display_name as client_name, p.status as payment_status
+               COALESCE(NULLIF(TRIM(CONCAT(u.first_name, ' ', u.last_name)), ''), u.display_name, u.email) as client_name,
+               p.status as payment_status
                FROM tickets t
                JOIN dossiers d ON t.dossier_id = d.id
                JOIN users u ON d.client_id = u.id
@@ -61,7 +62,8 @@ router.get('/:id', verifyToken, loadUser, async (req, res) => {
     }
     const result = await query(
       `SELECT t.*, d.client_id, d.conseiller_id, d.programme, d.statut as dossier_statut,
-       u.display_name as client_name, p.status as payment_status
+       COALESCE(NULLIF(TRIM(CONCAT(u.first_name, ' ', u.last_name)), ''), u.display_name, u.email) as client_name,
+       p.status as payment_status
        FROM tickets t
        JOIN dossiers d ON t.dossier_id = d.id
        JOIN users u ON d.client_id = u.id
