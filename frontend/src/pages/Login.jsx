@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useNavigate } from 'react-router-dom';
-import { Globe, Shield, Users, TrendingUp, Heart, Rocket, ChevronRight, Mail } from 'lucide-react';
+import { Globe, Shield, Users, TrendingUp, Heart, Rocket, ChevronRight, Mail, Eye, EyeOff } from 'lucide-react';
 
 export default function Login() {
   const [isRegister, setIsRegister] = useState(false);
@@ -10,6 +10,7 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const { login, register, loginWithGoogle, resetPassword } = useAuth();
@@ -218,14 +219,24 @@ export default function Login() {
                 className="input-dark w-full"
                 required
               />
-              <input
-                type="password"
-                placeholder="Mot de passe"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="input-dark w-full"
-                required
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Mot de passe"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="input-dark w-full pr-12"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-capitune-text hover:text-capitune-white transition"
+                  aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
               {error && <p className="text-red-500 text-sm">{error}</p>}
               <button type="submit" className="btn-primary w-full flex items-center justify-center gap-2">
                 {isRegister ? 'Créer un compte' : 'Se connecter'}
