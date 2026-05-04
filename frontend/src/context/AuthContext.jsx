@@ -72,12 +72,17 @@ export const AuthProvider = ({ children }) => {
     const cred = await firebaseAuth.createUserWithEmailAndPassword(auth, email, password);
     await firebaseAuth.updateProfile(cred.user, { displayName });
     const token = await cred.user.getIdToken();
-    await apiFetch('/api/auth/register', {
+    const res = await apiFetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ displayName, role }),
     });
-    await fetchDbUser(cred.user);
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error || 'Erreur lors de la création du profil utilisateur');
+    }
+    const data = await res.json();
+    setDbUser(data);
     return cred.user;
   };
 
@@ -90,18 +95,7 @@ export const AuthProvider = ({ children }) => {
     }
     const cred = await firebaseAuth.signInWithPopup(auth, googleProvider);
     const token = await cred.user.getIdToken();
-
-    // Check if user exists in our DB
-    const res = await apiFetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } });
-    if (res.ok) {
-      const data = await res.json();
-      setDbUser(data);
-      setFirebaseUser(cred.user);
-      return { user: cred.user, isNew: false };
-    }
-
-    // New user - register with chosen role
-    await apiFetch('/api/auth/register', {
+    const res = await apiFetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({
@@ -109,7 +103,12 @@ export const AuthProvider = ({ children }) => {
         role,
       }),
     });
-    await fetchDbUser(cred.user);
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error || 'Erreur lors de la création du profil utilisateur');
+    }
+    const data = await res.json();
+    setDbUser(data);
     setFirebaseUser(cred.user);
     return { user: cred.user, isNew: true };
   };

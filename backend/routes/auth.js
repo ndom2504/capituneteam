@@ -45,7 +45,14 @@ router.get('/me', verifyToken, loadUser, async (req, res) => {
     }
     const result = await query('SELECT * FROM users WHERE firebase_uid = $1', [req.user.uid]);
     if (!result.rows.length) {
-      return res.status(404).json({ error: 'User not found' });
+      const email = req.user.email?.toLowerCase();
+      const assignedRole = ADMIN_EMAILS.includes(email) ? 'admin' : 'client';
+      const created = await query(
+        `INSERT INTO users (firebase_uid, email, display_name, role, created_at)
+         VALUES ($1, $2, $3, $4, NOW()) RETURNING *`,
+        [req.user.uid, email, req.user.name || email.split('@')[0], assignedRole]
+      );
+      return res.status(201).json(created.rows[0]);
     }
     res.json(result.rows[0]);
   } catch (err) {
