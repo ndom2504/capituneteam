@@ -8,6 +8,10 @@ const router = Router();
 
 router.post('/create-checkout-session', verifyToken, loadUser, async (req, res) => {
   try {
+    await query("ALTER TABLE payments ALTER COLUMN status TYPE VARCHAR(20)");
+    await query("ALTER TABLE payments ALTER COLUMN status SET DEFAULT 'initie'");
+    await query("ALTER TABLE payments DROP CONSTRAINT IF EXISTS payments_status_check");
+    await query("ALTER TABLE payments ADD CONSTRAINT payments_status_check CHECK (status IN ('initie', 'reussi', 'echec', 'rembourse'))");
     if (!req.user.dbUser) {
       return res.status(404).json({ error: 'User not found in database' });
     }
