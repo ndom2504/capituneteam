@@ -11,8 +11,10 @@ const router = Router();
 router.post('/', verifyToken, requireRole(['client']), loadUser, upload.single('file'), async (req, res) => {
   try {
     const programme = req.body.programme;
+    const titre = req.body.titre || `Projet ${programme}`;
     const data = JSON.parse(req.body.data);
     const client_id = req.user.dbUser.id;
+    await query('ALTER TABLE dossiers ADD COLUMN IF NOT EXISTS titre VARCHAR(255)');
 
     let file_url = null;
     if (req.file) {
@@ -34,9 +36,9 @@ router.post('/', verifyToken, requireRole(['client']), loadUser, upload.single('
     }
 
     const dbResult = await query(
-      `INSERT INTO dossiers (client_id, programme, statut, data, file_url, created_at)
-       VALUES ($1, $2, 'brouillon', $3, $4, NOW()) RETURNING *`,
-      [client_id, programme, data, file_url]
+      `INSERT INTO dossiers (client_id, programme, titre, statut, data, file_url, created_at)
+       VALUES ($1, $2, $3, 'brouillon', $4, $5, NOW()) RETURNING *`,
+      [client_id, programme, titre, data, file_url]
     );
     res.status(201).json(dbResult.rows[0]);
   } catch (err) {
@@ -196,8 +198,10 @@ router.post('/:id/refuser', verifyToken, requireRole(['conseiller']), loadUser, 
 router.put('/:id', verifyToken, requireRole(['client']), loadUser, upload.single('file'), async (req, res) => {
   try {
     const programme = req.body.programme;
+    const titre = req.body.titre || `Projet ${programme}`;
     const data = JSON.parse(req.body.data);
     const client_id = req.user.dbUser.id;
+    await query('ALTER TABLE dossiers ADD COLUMN IF NOT EXISTS titre VARCHAR(255)');
 
     // Check if dossier exists and belongs to client and is in brouillon status
     const checkResult = await query(
@@ -228,8 +232,8 @@ router.put('/:id', verifyToken, requireRole(['client']), loadUser, upload.single
     }
 
     const updateResult = await query(
-      `UPDATE dossiers SET programme = $1, data = $2, file_url = $3 WHERE id = $4 RETURNING *`,
-      [programme, data, file_url, req.params.id]
+      `UPDATE dossiers SET programme = $1, titre = $2, data = $3, file_url = $4 WHERE id = $5 RETURNING *`,
+      [programme, titre, data, file_url, req.params.id]
     );
     res.json(updateResult.rows[0]);
   } catch (err) {

@@ -32,12 +32,16 @@ router.get('/', verifyToken, loadUser, async (req, res) => {
     if (!req.user.dbUser) {
       return res.status(404).json({ error: 'User not found in database' });
     }
-    let sql = `SELECT t.*, d.data, d.programme, d.statut as dossier_statut, d.client_id, d.conseiller_id as dossier_conseiller_id,
+    let sql = `SELECT t.*, d.data, d.programme, d.titre, d.statut as dossier_statut, d.client_id, d.conseiller_id as dossier_conseiller_id,
                COALESCE(NULLIF(TRIM(CONCAT(u.first_name, ' ', u.last_name)), ''), u.display_name, u.email) as client_name,
+               u.profile_photo_url as client_photo_url, u.email as client_email,
+               COALESCE(NULLIF(TRIM(CONCAT(co.first_name, ' ', co.last_name)), ''), co.display_name, co.email) as conseiller_name,
+               co.profile_photo_url as conseiller_photo_url, co.email as conseiller_email,
                p.status as payment_status
                FROM tickets t
                JOIN dossiers d ON t.dossier_id = d.id
                JOIN users u ON d.client_id = u.id
+               LEFT JOIN users co ON t.conseiller_id = co.id
                LEFT JOIN payments p ON p.ticket_id = t.id`;
     let params = [];
     if (req.user.role === 'client') {
@@ -61,12 +65,16 @@ router.get('/:id', verifyToken, loadUser, async (req, res) => {
       return res.status(404).json({ error: 'User not found in database' });
     }
     const result = await query(
-      `SELECT t.*, d.client_id, d.conseiller_id, d.programme, d.statut as dossier_statut,
+      `SELECT t.*, d.client_id, d.conseiller_id, d.programme, d.titre, d.statut as dossier_statut,
        COALESCE(NULLIF(TRIM(CONCAT(u.first_name, ' ', u.last_name)), ''), u.display_name, u.email) as client_name,
+       u.profile_photo_url as client_photo_url, u.email as client_email,
+       COALESCE(NULLIF(TRIM(CONCAT(co.first_name, ' ', co.last_name)), ''), co.display_name, co.email) as conseiller_name,
+       co.profile_photo_url as conseiller_photo_url, co.email as conseiller_email,
        p.status as payment_status
        FROM tickets t
        JOIN dossiers d ON t.dossier_id = d.id
        JOIN users u ON d.client_id = u.id
+       LEFT JOIN users co ON t.conseiller_id = co.id
        LEFT JOIN payments p ON p.ticket_id = t.id
        WHERE t.id = $1`,
       [req.params.id]

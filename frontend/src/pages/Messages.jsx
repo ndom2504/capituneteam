@@ -49,6 +49,15 @@ function FileAttachment({ url, isMine }) {
   );
 }
 
+function ProfileBubble({ name, photoUrl, align = 'left' }) {
+  const initials = (name || '?').split(' ').filter(Boolean).slice(0, 2).map(part => part[0]).join('').toUpperCase();
+  return (
+    <div className={`w-8 h-8 rounded-full overflow-hidden bg-capitune-gray border border-capitune-border flex items-center justify-center text-xs font-bold shrink-0 ${align === 'right' ? 'order-2' : ''}`}>
+      {photoUrl ? <img src={photoUrl} alt={name || 'Profil'} className="w-full h-full object-cover" /> : initials}
+    </div>
+  );
+}
+
 export default function Messages() {
   const { dossierId } = useParams();
   const { dbUser, getToken } = useAuth();
@@ -137,7 +146,7 @@ export default function Messages() {
               <button key={d.id} onClick={() => setSelected(d.id)} className="card-dark w-full text-left hover:border-blue-500 transition-all p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <FileText size={16} className="text-blue-400" />
-                  <span className="font-semibold text-capitune-white">Dossier #{d.id}</span>
+                  <span className="font-semibold text-capitune-white">{d.titre || `Dossier #${d.id}`}</span>
                 </div>
                 <p className="text-sm text-capitune-white">{programmeLabel[d.programme] || d.programme}</p>
                 <p className="text-xs text-capitune-text mt-1">{statutLabel[d.statut] || d.statut}</p>
@@ -152,16 +161,22 @@ export default function Messages() {
             ← Changer de dossier
           </button>
           <div className="flex-1 overflow-y-auto space-y-3 bg-capitune-dark rounded-xl p-4 border border-capitune-border">
-            {messages.map(m => (
-              <div key={m.id} className={`max-w-[70%] ${m.sender_id === dbUser?.id ? 'ml-auto' : ''}`}>
-                <div className={`rounded-xl px-4 py-2 text-sm ${m.sender_id === dbUser?.id ? 'bg-capitune-white text-capitune-black' : 'bg-capitune-gray text-capitune-white'}`}>
-                  <p className="text-xs opacity-70 mb-1">{m.sender_name}</p>
-                  {m.content && <p>{m.content}</p>}
-                  <FileAttachment url={m.file_url} isMine={m.sender_id === dbUser?.id} />
+            {messages.map(m => {
+              const isMine = m.sender_id === dbUser?.id;
+              return (
+              <div key={m.id} className={`flex gap-2 max-w-[85%] ${isMine ? 'ml-auto justify-end' : ''}`}>
+                <ProfileBubble name={m.sender_name} photoUrl={m.sender_photo_url} align={isMine ? 'right' : 'left'} />
+                <div>
+                  <div className={`rounded-xl px-4 py-2 text-sm ${isMine ? 'bg-capitune-white text-capitune-black' : 'bg-capitune-gray text-capitune-white'}`}>
+                    <p className="text-xs opacity-70 mb-1">{m.sender_name}</p>
+                    {m.content && <p>{m.content}</p>}
+                    <FileAttachment url={m.file_url} isMine={isMine} />
+                  </div>
+                  <p className={`text-[10px] text-capitune-text mt-1 ${isMine ? 'text-right' : ''}`}>{new Date(m.created_at).toLocaleString('fr-CA')}</p>
                 </div>
-                <p className="text-[10px] text-capitune-text mt-1">{new Date(m.created_at).toLocaleString('fr-CA')}</p>
               </div>
-            ))}
+              );
+            })}
             {messages.length === 0 && <p className="text-capitune-text text-center">Aucun message.</p>}
           </div>
           {sendError && <p className="text-red-400 text-xs">{sendError}</p>}

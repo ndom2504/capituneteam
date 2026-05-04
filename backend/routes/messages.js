@@ -20,7 +20,8 @@ router.get('/', verifyToken, loadUser, async (req, res) => {
     if (req.user.role === 'conseiller') {
       // For conseillers, fetch messages from dossiers assigned to them
       result = await query(
-        `SELECT m.*, u.display_name as sender_name, d.programme
+        `SELECT m.*, COALESCE(NULLIF(TRIM(CONCAT(u.first_name, ' ', u.last_name)), ''), u.display_name, u.email) as sender_name,
+                u.profile_photo_url as sender_photo_url, u.email as sender_email, d.programme, d.titre
          FROM messages m
          JOIN users u ON m.sender_id = u.id
          JOIN dossiers d ON m.dossier_id = d.id
@@ -31,7 +32,8 @@ router.get('/', verifyToken, loadUser, async (req, res) => {
     } else {
       // For clients, fetch messages from their dossiers
       result = await query(
-        `SELECT m.*, u.display_name as sender_name, d.programme
+        `SELECT m.*, COALESCE(NULLIF(TRIM(CONCAT(u.first_name, ' ', u.last_name)), ''), u.display_name, u.email) as sender_name,
+                u.profile_photo_url as sender_photo_url, u.email as sender_email, d.programme, d.titre
          FROM messages m
          JOIN users u ON m.sender_id = u.id
          JOIN dossiers d ON m.dossier_id = d.id
@@ -62,7 +64,12 @@ router.get('/:dossierId', verifyToken, loadUser, async (req, res) => {
       return res.status(403).json({ error: 'Forbidden' });
     }
     const result = await query(
-      'SELECT m.*, u.display_name as sender_name FROM messages m JOIN users u ON m.sender_id = u.id WHERE m.dossier_id = $1 ORDER BY m.created_at ASC',
+      `SELECT m.*, COALESCE(NULLIF(TRIM(CONCAT(u.first_name, ' ', u.last_name)), ''), u.display_name, u.email) as sender_name,
+              u.profile_photo_url as sender_photo_url, u.email as sender_email
+       FROM messages m
+       JOIN users u ON m.sender_id = u.id
+       WHERE m.dossier_id = $1
+       ORDER BY m.created_at ASC`,
       [req.params.dossierId]
     );
     res.json(result.rows);

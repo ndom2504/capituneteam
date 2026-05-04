@@ -10,6 +10,7 @@ export default function CreateDossier() {
   const { id } = useParams();
   const isEditing = !!id;
   const [programme, setProgramme] = useState('entree_express');
+  const [titre, setTitre] = useState('Projet immigration');
   const [formData, setFormData] = useState({
     nom: '',
     prenom: '',
@@ -63,6 +64,7 @@ export default function CreateDossier() {
         if (res.ok) {
           const dossier = await res.json();
           setProgramme(dossier.programme);
+          setTitre(dossier.titre || 'Projet immigration');
           setFormData(dossier.data);
           setSelectedConseiller(dossier.conseiller_id || '');
         }
@@ -99,6 +101,7 @@ export default function CreateDossier() {
       const token = await getToken();
       const formDataToSend = new FormData();
       formDataToSend.append('programme', programme);
+      formDataToSend.append('titre', titre || `Projet ${programme}`);
       formDataToSend.append('data', JSON.stringify(formData));
       if (file) {
         formDataToSend.append('file', file);
@@ -452,6 +455,19 @@ export default function CreateDossier() {
       )}
 
       <div className="card-dark space-y-6">
+        <div>
+          <label className="block text-xs text-capitune-text uppercase mb-2">Nom du dossier</label>
+          <input
+            value={titre}
+            onChange={(e) => setTitre(e.target.value)}
+            className="input-dark w-full"
+            placeholder="Projet immigration Canada"
+            disabled={loading}
+            required
+          />
+          <p className="text-xs text-capitune-text mt-1">Exemple : Projet permis d’étude, Projet Entrée Express, Projet affaires Canada.</p>
+        </div>
+
         <div>
           <label className="block text-xs text-capitune-text uppercase mb-2">Programme d'immigration</label>
           <select

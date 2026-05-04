@@ -4,6 +4,15 @@ import { apiFetch } from '../config/api.js';
 import { Link } from 'react-router-dom';
 import { Plus, ArrowRight } from 'lucide-react';
 
+function ProfileBubble({ name, photoUrl }) {
+  const initials = (name || '?').split(' ').filter(Boolean).slice(0, 2).map(part => part[0]).join('').toUpperCase();
+  return (
+    <div className="w-10 h-10 rounded-full overflow-hidden bg-capitune-gray border border-capitune-border flex items-center justify-center text-xs font-bold shrink-0">
+      {photoUrl ? <img src={photoUrl} alt={name || 'Profil'} className="w-full h-full object-cover" /> : initials}
+    </div>
+  );
+}
+
 export default function Tickets() {
   const { dbUser, getToken } = useAuth();
   const [tickets, setTickets] = useState([]);
@@ -334,7 +343,7 @@ export default function Tickets() {
           <select value={form.dossier_id} onChange={e => setForm({ ...form, dossier_id: e.target.value })} className="input-dark w-full" required>
             <option value="">Choisir un dossier accepté</option>
             {dossiers.filter(d => d.statut === 'accepte').map(d => (
-              <option key={d.id} value={d.id}>Dossier #{d.id} - {d.programme}</option>
+              <option key={d.id} value={d.id}>{d.titre || `Dossier #${d.id}`} - {d.programme}</option>
             ))}
           </select>
           <select value={form.service_name} onChange={e => handleServiceChange(e.target.value)} className="input-dark w-full" required>
@@ -375,11 +384,17 @@ export default function Tickets() {
       <div className="space-y-3">
         {tickets.map(t => (
           <Link key={t.id} to={`/tickets/${t.id}`} className="card-dark flex items-center justify-between hover:border-capitune-white transition">
-            <div>
+            <div className="flex items-center gap-3">
+              <ProfileBubble
+                name={dbUser?.role === 'client' ? t.conseiller_name : t.client_name}
+                photoUrl={dbUser?.role === 'client' ? t.conseiller_photo_url : t.client_photo_url}
+              />
+              <div>
               <p className="font-semibold">{t.service_name}</p>
               <p className="text-sm text-capitune-text">
-                Dossier #{t.dossier_id} • {t.client_name || 'Client'} • {statusLabel[t.status] || t.status} • {t.price} $CAD
+                {t.titre || `Dossier #${t.dossier_id}`} • {dbUser?.role === 'client' ? (t.conseiller_name || 'Conseiller') : (t.client_name || 'Client')} • {statusLabel[t.status] || t.status} • {t.price} $CAD
               </p>
+              </div>
             </div>
             <ArrowRight size={18} className="text-capitune-text" />
           </Link>

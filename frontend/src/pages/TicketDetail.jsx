@@ -4,6 +4,15 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { apiFetch } from '../config/api.js';
 import { ArrowLeft } from 'lucide-react';
 
+function ProfileBubble({ name, photoUrl }) {
+  const initials = (name || '?').split(' ').filter(Boolean).slice(0, 2).map(part => part[0]).join('').toUpperCase();
+  return (
+    <div className="w-12 h-12 rounded-full overflow-hidden bg-capitune-gray border border-capitune-border flex items-center justify-center text-sm font-bold shrink-0">
+      {photoUrl ? <img src={photoUrl} alt={name || 'Profil'} className="w-full h-full object-cover" /> : initials}
+    </div>
+  );
+}
+
 export default function TicketDetail() {
   const { id } = useParams();
   const { dbUser, getToken } = useAuth();
@@ -72,8 +81,17 @@ export default function TicketDetail() {
             <h2 className="text-xl font-bold">{ticket.service_name}</h2>
             <span className="text-sm bg-capitune-gray border border-capitune-border px-3 py-1 rounded-full">{statusLabel[ticket.status] || ticket.status}</span>
           </div>
-          <p className="text-capitune-text">Dossier #{ticket.dossier_id}</p>
-          {ticket.client_name && <p className="text-sm text-capitune-text">Client : {ticket.client_name}</p>}
+          <p className="text-capitune-text">{ticket.titre || `Dossier #${ticket.dossier_id}`}</p>
+          <div className="flex items-center gap-3 bg-capitune-gray/40 border border-capitune-border rounded-xl p-3">
+            <ProfileBubble
+              name={dbUser?.role === 'client' ? ticket.conseiller_name : ticket.client_name}
+              photoUrl={dbUser?.role === 'client' ? ticket.conseiller_photo_url : ticket.client_photo_url}
+            />
+            <div>
+              <p className="text-xs text-capitune-text">{dbUser?.role === 'client' ? 'Conseiller émetteur' : 'Client concerné'}</p>
+              <p className="font-semibold">{dbUser?.role === 'client' ? (ticket.conseiller_name || 'Conseiller') : (ticket.client_name || 'Client')}</p>
+            </div>
+          </div>
           <p className="text-lg font-semibold">{ticket.price} $CAD</p>
           {ticket.deadline && <p className="text-sm text-capitune-text">Deadline: {new Date(ticket.deadline).toLocaleDateString('fr-CA')}</p>}
           {ticket.description && <div><p className="font-semibold">Description</p><p className="text-capitune-text">{ticket.description}</p></div>}
