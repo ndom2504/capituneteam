@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
-import { LayoutDashboard, FolderOpen, Ticket, MessageSquare, User, LogOut, Menu, X, Briefcase, Shield, BookOpen } from 'lucide-react';
+import { LayoutDashboard, FolderOpen, Ticket, MessageSquare, User, LogOut, Menu, X, Briefcase, Shield, BookOpen, Users } from 'lucide-react';
 import { useState } from 'react';
 
 const navItems = [
@@ -9,6 +9,7 @@ const navItems = [
   { path: '/tickets', label: 'Services', icon: Ticket },
   { path: '/messages', label: 'Messages', icon: MessageSquare },
   { path: '/resources', label: 'Ressources', icon: BookOpen },
+  { path: '/community', label: 'Communauté', icon: Users },
   { path: '/profile', label: 'Profil', icon: User },
 ];
 
@@ -17,6 +18,7 @@ const conseillerNavItems = [
   { path: '/tickets', label: 'Paiements', icon: Ticket },
   { path: '/messages', label: 'Messages', icon: MessageSquare },
   { path: '/resources', label: 'Ressources', icon: BookOpen },
+  { path: '/community', label: 'Communauté', icon: Users },
   { path: '/profile', label: 'Profil', icon: User },
 ];
 
@@ -27,6 +29,7 @@ const adminNavItems = [
   { path: '/tickets', label: 'Services', icon: Ticket },
   { path: '/messages', label: 'Messages', icon: MessageSquare },
   { path: '/resources', label: 'Ressources', icon: BookOpen },
+  { path: '/community', label: 'Communauté', icon: Users },
   { path: '/profile', label: 'Profil', icon: User },
 ];
 
