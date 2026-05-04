@@ -20,7 +20,14 @@ router.get('/', verifyToken, requireRole(['admin']), async (req, res) => {
 
 router.get('/conseillers', verifyToken, loadUser, async (req, res) => {
   try {
-    const result = await query('SELECT id, email, display_name, first_name, last_name FROM users WHERE role = $1', ['conseiller']);
+    await query("ALTER TABLE users ADD COLUMN IF NOT EXISTS account_status VARCHAR(20) DEFAULT 'active'");
+    const result = await query(
+      `SELECT id, email, display_name, first_name, last_name
+       FROM users
+       WHERE role = $1 AND COALESCE(account_status, 'active') = $2
+       ORDER BY first_name NULLS LAST, last_name NULLS LAST, display_name NULLS LAST, email`,
+      ['conseiller', 'active']
+    );
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
