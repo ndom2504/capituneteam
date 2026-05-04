@@ -34,7 +34,7 @@ router.get('/', verifyToken, loadUser, async (req, res) => {
     await ensureCommunityTables();
     const userId = req.user.dbUser?.id || 0;
     const result = await query(
-      `SELECT p.*,
+      `SELECT p.id, p.author_id, p.title, p.content, p.media_url, p.media_type, p.created_at,
               COALESCE(NULLIF(TRIM(CONCAT(u.first_name, ' ', u.last_name)), ''), u.display_name, u.email) as author_name,
               u.profile_photo_url as author_photo_url,
               COUNT(DISTINCT l.user_id)::int as likes_count,
@@ -44,7 +44,7 @@ router.get('/', verifyToken, loadUser, async (req, res) => {
        LEFT JOIN users u ON p.author_id = u.id
        LEFT JOIN community_likes l ON l.post_id = p.id
        LEFT JOIN community_comments c ON c.post_id = p.id
-       GROUP BY p.id, u.first_name, u.last_name, u.display_name, u.email, u.profile_photo_url
+       GROUP BY p.id, p.author_id, p.title, p.content, p.media_url, p.media_type, p.created_at, u.first_name, u.last_name, u.display_name, u.email, u.profile_photo_url
        ORDER BY p.created_at DESC`,
       [userId]
     );
