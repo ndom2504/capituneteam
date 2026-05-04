@@ -63,7 +63,7 @@ export default function Community() {
         
         const token = await getToken();
         const sigRes = await apiFetch(`/api/community/upload-signature?resource_type=${resourceType}`, {
-          headers: { Authorization: `Bearer ${token}` }`
+          headers: { Authorization: `Bearer ${token}` }
         });
         if (!sigRes.ok) throw new Error('Impossible de générer la signature d\'upload');
         const { signature, timestamp, apiKey, cloudName, folder, resourceType: resType } = await sigRes.json();
