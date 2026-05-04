@@ -7,6 +7,8 @@ import { FolderOpen, Ticket, MessageSquare } from 'lucide-react';
 export default function Dashboard() {
   const { dbUser, getToken } = useAuth();
   const [stats, setStats] = useState({ dossiers: 0, tickets: 0, messages: 0 });
+  const [migrationStatus, setMigrationStatus] = useState('');
+  const [migrationLoading, setMigrationLoading] = useState(false);
 
   useEffect(() => {
     async function fetchStats() {
@@ -26,10 +28,40 @@ export default function Dashboard() {
     if (dbUser) fetchStats();
   }, [dbUser, getToken]);
 
+  async function runMigration() {
+    setMigrationLoading(true);
+    setMigrationStatus('');
+    try {
+      const token = await getToken();
+      const res = await apiFetch('/api/tickets/migrate', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      setMigrationStatus(res.ok ? data.message : data.error || 'Erreur migration');
+    } catch {
+      setMigrationStatus('Erreur de connexion pendant la migration');
+    } finally {
+      setMigrationLoading(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Tableau de bord</h2>
       <p className="text-capitune-text">Bienvenue, {dbUser?.display_name}.</p>
+      {dbUser?.role === 'admin' && (
+        <div className="card-dark border-yellow-700/60">
+          <h3 className="font-semibold text-yellow-300 mb-2">Migration base de données</h3>
+          <p className="text-sm text-capitune-text mb-4">
+            Bouton temporaire admin pour ajouter les colonnes tickets/payments nécessaires au paiement Stripe.
+          </p>
+          <button onClick={runMigration} disabled={migrationLoading} className="btn-primary">
+            {migrationLoading ? 'Migration en cours...' : 'Exécuter migration'}
+          </button>
+          {migrationStatus && <p className="text-sm text-capitune-text mt-3">{migrationStatus}</p>}
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Link to="/dossiers" className="card-dark hover:border-capitune-white transition">
           <div className="flex items-center gap-3 mb-2">
