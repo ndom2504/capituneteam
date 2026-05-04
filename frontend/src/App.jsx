@@ -13,6 +13,7 @@ import Messages from './pages/Messages.jsx';
 import Profile from './pages/Profile.jsx';
 import ConseillerDashboard from './pages/ConseillerDashboard.jsx';
 import Admin from './pages/Admin.jsx';
+import Resources from './pages/Resources.jsx';
 
 function ProtectedRoute({ children }) {
   const { firebaseUser, loading } = useAuth();
@@ -38,6 +39,7 @@ function AppRoutes() {
       <Route path="/messages/:dossierId" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
       <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
+      <Route path="/resources" element={<ProtectedRoute><Resources /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );
