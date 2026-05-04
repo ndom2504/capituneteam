@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
-import { LayoutDashboard, FolderOpen, Ticket, MessageSquare, User, LogOut, Menu, X, Info, Briefcase } from 'lucide-react';
+import { LayoutDashboard, FolderOpen, Ticket, MessageSquare, User, LogOut, Menu, X, Info, Briefcase, Shield } from 'lucide-react';
 import { useState } from 'react';
 
 const navItems = [
@@ -19,6 +19,15 @@ const conseillerNavItems = [
   { path: '/profile', label: 'Profil', icon: User },
 ];
 
+const adminNavItems = [
+  { path: '/', label: 'Tableau de bord', icon: LayoutDashboard },
+  { path: '/admin', label: 'Administration', icon: Shield },
+  { path: '/dossiers', label: 'Dossiers', icon: FolderOpen },
+  { path: '/tickets', label: 'Services', icon: Ticket },
+  { path: '/messages', label: 'Messages', icon: MessageSquare },
+  { path: '/profile', label: 'Profil', icon: User },
+];
+
 export default function Layout({ children }) {
   const { dbUser, logout } = useAuth();
   const location = useLocation();
@@ -30,7 +39,7 @@ export default function Layout({ children }) {
     navigate('/login');
   };
 
-  const currentNavItems = dbUser?.role === 'conseiller' ? conseillerNavItems : navItems;
+  const currentNavItems = dbUser?.role === 'admin' ? adminNavItems : dbUser?.role === 'conseiller' ? conseillerNavItems : navItems;
   const userDisplayName = dbUser?.first_name || dbUser?.last_name
     ? `${dbUser?.first_name || ''} ${dbUser?.last_name || ''}`.trim()
     : dbUser?.display_name || dbUser?.email;

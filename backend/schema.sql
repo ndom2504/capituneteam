@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
   last_name VARCHAR(100),
   profile_photo_url VARCHAR(500),
   role VARCHAR(20) CHECK (role IN ('client', 'conseiller', 'admin')) DEFAULT 'client',
+  account_status VARCHAR(20) DEFAULT 'active',
   created_at TIMESTAMP DEFAULT NOW()
 );
 
@@ -14,6 +15,7 @@ CREATE TABLE IF NOT EXISTS users (
 ALTER TABLE users ADD COLUMN IF NOT EXISTS first_name VARCHAR(100);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS last_name VARCHAR(100);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_photo_url VARCHAR(500);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS account_status VARCHAR(20) DEFAULT 'active';
 
 -- Drop existing dossiers table if it exists with old structure
 DROP TABLE IF EXISTS dossiers CASCADE;

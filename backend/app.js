@@ -7,6 +7,7 @@ import dossierRoutes from './routes/dossiers.js';
 import ticketRoutes from './routes/tickets.js';
 import paymentRoutes from './routes/payments.js';
 import messageRoutes from './routes/messages.js';
+import adminRoutes from './routes/admin.js';
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use('/api/dossiers', dossierRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', service: 'capitune-backend' });
