@@ -124,10 +124,45 @@ router.post('/:postId/like', verifyToken, loadUser, async (req, res) => {
   }
 });
 
-router.delete('/:postId', verifyToken, requireRole(['admin']), async (req, res) => {
+router.put('/:postId', verifyToken, loadUser, async (req, res) => {
   try {
     await ensureCommunityTables();
-    await query('DELETE FROM community_posts WHERE id = $1', [req.params.postId]);
+    const { title, content, media_url: mediaUrl, media_type: mediaType } = req.body;
+    const postId = req.params.postId;
+    
+    const postResult = await query('SELECT author_id FROM community_posts WHERE id = $1', [postId]);
+    if (!postResult.rows.length) return res.status(404).json({ error: 'Publication non trouvée' });
+    
+    const post = postResult.rows[0];
+    if (post.author_id !== req.user.dbUser.id && req.user.dbUser.role !== 'admin') {
+      return res.status(403).json({ error: 'Non autorisé' });
+    }
+    
+    const result = await query(
+      'UPDATE community_posts SET title = $2, content = $3, media_url = $4, media_type = $5 WHERE id = $1 RETURNING *',
+      [postId, title || '', content || '', mediaUrl || null, mediaType || null]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/:postId', verifyToken, loadUser, async (req, res) => {
+  try {
+    await ensureCommunityTables();
+    const postId = req.params.postId;
+    
+    // Vérifier que la publication appartient à l'utilisateur ou que c'est un admin
+    const postResult = await query('SELECT author_id FROM community_posts WHERE id = $1', [postId]);
+    if (!postResult.rows.length) return res.status(404).json({ error: 'Publication non trouvée' });
+    
+    const post = postResult.rows[0];
+    if (post.author_id !== req.user.dbUser.id && req.user.dbUser.role !== 'admin') {
+      return res.status(403).json({ error: 'Non autorisé' });
+    }
+    
+    await query('DELETE FROM community_posts WHERE id = $1', [postId]);
     res.json({ message: 'Publication supprimée' });
   } catch (err) {
     res.status(500).json({ error: err.message });

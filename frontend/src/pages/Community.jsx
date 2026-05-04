@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { apiFetch } from '../config/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
-import { Heart, ImagePlus, MessageCircle, Send, Users } from 'lucide-react';
+import { Heart, ImagePlus, MessageCircle, Send, Users, Trash2, Edit2, X } from 'lucide-react';
 
 function ProfileBubble({ name, photoUrl }) {
   const initials = (name || '?').split(' ').filter(Boolean).slice(0, 2).map(part => part[0]).join('').toUpperCase();
@@ -22,6 +22,9 @@ export default function Community() {
   const [media, setMedia] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [editingPostId, setEditingPostId] = useState(null);
+  const [editForm, setEditForm] = useState({ title: '', content: '', media_url: '', media_type: '' });
+  const [editMedia, setEditMedia] = useState(null);
 
   const canPublish = dbUser?.role === 'conseiller' || dbUser?.role === 'admin';
   const isAdviser = dbUser?.role === 'conseiller' || dbUser?.role === 'admin';
@@ -116,6 +119,82 @@ export default function Community() {
     if (res.ok) fetchPosts();
   }
 
+  function startEdit(post) {
+    setEditingPostId(post.id);
+    setEditForm({
+      title: post.title || '',
+      content: post.content || '',
+      media_url: post.media_url || '',
+      media_type: post.media_type || ''
+    });
+    setEditMedia(null);
+  }
+
+  async function saveEdit() {
+    if (!editingPostId) return;
+    try {
+      let mediaUrl = editForm.media_url;
+      let mediaType = editForm.media_type;
+
+      if (editMedia) {
+        const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+        const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+
+        if (!cloudName || !uploadPreset) {
+          throw new Error('Variables d\'environnement Cloudinary non configurées');
+        }
+
+        const cloudForm = new FormData();
+        cloudForm.append('file', editMedia);
+        cloudForm.append('upload_preset', uploadPreset);
+        cloudForm.append('folder', 'capitune/community');
+
+        const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
+          method: 'POST',
+          body: cloudForm,
+        });
+        if (!uploadRes.ok) throw new Error('Erreur lors de l\'upload du média');
+        const uploadData = await uploadRes.json();
+        mediaUrl = uploadData.secure_url;
+        mediaType = uploadData.resource_type;
+      }
+
+      const token = await getToken();
+      const res = await apiFetch(`/api/community/${editingPostId}`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: editForm.title,
+          content: editForm.content,
+          media_url: mediaUrl,
+          media_type: mediaType,
+        }),
+      });
+      if (!res.ok) throw new Error('Erreur lors de la modification');
+      setEditingPostId(null);
+      setMessage('Publication modifiée avec succès');
+      fetchPosts();
+    } catch (err) {
+      setMessage(err.message);
+    }
+  }
+
+  async function deletePost(postId) {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette publication?')) return;
+    try {
+      const token = await getToken();
+      const res = await apiFetch(`/api/community/${postId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Erreur lors de la suppression');
+      setMessage('Publication supprimée avec succès');
+      fetchPosts();
+    } catch (err) {
+      setMessage(err.message);
+    }
+  }
+
   async function addComment(postId) {
     const content = commentText[postId]?.trim();
     if (!content) return;
@@ -160,15 +239,50 @@ export default function Community() {
         </form>
       )}
 
+      {editingPostId && (
+        <div className="card-dark space-y-4 border-2 border-capitune-accent">
+          <div className="flex justify-between items-center">
+            <h3 className="font-semibold">Modifier la publication</h3>
+            <button onClick={() => setEditingPostId(null)} className="text-capitune-text hover:text-capitune-white">
+              <X size={20} />
+            </button>
+          </div>
+          <input value={editForm.title} onChange={e => setEditForm({ ...editForm, title: e.target.value })} className="input-dark w-full" placeholder="Titre" />
+          <textarea value={editForm.content} onChange={e => setEditForm({ ...editForm, content: e.target.value })} className="input-dark w-full min-h-24" placeholder="Contenu" />
+          <label className="btn-outline cursor-pointer inline-flex items-center gap-2">
+            <ImagePlus size={18} /> Remplacer le média
+            <input type="file" accept="image/*,video/*" className="hidden" onChange={e => setEditMedia(e.target.files[0])} />
+          </label>
+          {editMedia && <p className="text-xs text-capitune-text">Nouveau média: {editMedia.name}</p>}
+          {editForm.media_url && !editMedia && <p className="text-xs text-capitune-text">Média actuel conservé</p>}
+          <div className="flex gap-2">
+            <button onClick={saveEdit} className="btn-primary">Enregistrer</button>
+            <button onClick={() => setEditingPostId(null)} className="btn-outline">Annuler</button>
+          </div>
+        </div>
+      )}
+
       <div className="space-y-4">
         {posts.map(post => (
           <article key={post.id} className="card-dark space-y-4">
-            <div className="flex items-center gap-3">
-              <ProfileBubble name={post.author_name} photoUrl={post.author_photo_url} />
-              <div>
-                <p className="font-semibold">{post.author_name || 'Conseiller'}</p>
-                <p className="text-xs text-capitune-text">{new Date(post.created_at).toLocaleString('fr-CA')}</p>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <ProfileBubble name={post.author_name} photoUrl={post.author_photo_url} />
+                <div>
+                  <p className="font-semibold">{post.author_name || 'Conseiller'}</p>
+                  <p className="text-xs text-capitune-text">{new Date(post.created_at).toLocaleString('fr-CA')}</p>
+                </div>
               </div>
+              {(post.author_id === dbUser?.id || dbUser?.role === 'admin') && (
+                <div className="flex gap-2">
+                  <button onClick={() => startEdit(post)} className="btn-outline text-sm p-2" title="Modifier">
+                    <Edit2 size={16} />
+                  </button>
+                  <button onClick={() => deletePost(post.id)} className="btn-outline text-sm p-2 text-red-500 border-red-500" title="Supprimer">
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              )}
             </div>
             {post.title && <h3 className="text-xl font-bold">{post.title}</h3>}
             {post.content && <p className="text-capitune-text whitespace-pre-wrap">{post.content}</p>}
