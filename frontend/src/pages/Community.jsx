@@ -273,7 +273,7 @@ export default function Community() {
                   <p className="text-xs text-capitune-text">{new Date(post.created_at).toLocaleString('fr-CA')}</p>
                 </div>
               </div>
-              {(post.author_id === dbUser?.id || dbUser?.role === 'admin') && (
+              {(Number(post.author_id) === Number(dbUser?.id) || dbUser?.role === 'admin') && (
                 <div className="flex gap-2">
                   <button onClick={() => startEdit(post)} className="btn-outline text-sm p-2" title="Modifier">
                     <Edit2 size={16} />

@@ -134,7 +134,7 @@ router.put('/:postId', verifyToken, loadUser, async (req, res) => {
     if (!postResult.rows.length) return res.status(404).json({ error: 'Publication non trouvée' });
     
     const post = postResult.rows[0];
-    if (post.author_id !== req.user.dbUser.id && req.user.dbUser.role !== 'admin') {
+    if (Number(post.author_id) !== Number(req.user.dbUser.id) && req.user.dbUser.role !== 'admin') {
       return res.status(403).json({ error: 'Non autorisé' });
     }
     
@@ -158,7 +158,7 @@ router.delete('/:postId', verifyToken, loadUser, async (req, res) => {
     if (!postResult.rows.length) return res.status(404).json({ error: 'Publication non trouvée' });
     
     const post = postResult.rows[0];
-    if (post.author_id !== req.user.dbUser.id && req.user.dbUser.role !== 'admin') {
+    if (Number(post.author_id) !== Number(req.user.dbUser.id) && req.user.dbUser.role !== 'admin') {
       return res.status(403).json({ error: 'Non autorisé' });
     }
     
