@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "837356366256",
+    "project_id": "capituneteam",
+    "storage_bucket": "capituneteam.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:837356366256:android:ea69adcdf6cfb0e7f58e75",
+        "android_client_info": {
+          "package_name": "com.example.capitune"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "837356366256-ginu4o39tj4dhmi9knomru5eu9selbi8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.capitune",
+            "certificate_hash": "aa9a960bc7601e8a0f1bf9ba36dc3cb69c66fa73"
+          }
+        },
+        {
+          "client_id": "837356366256-l32fm3mjsadotbgfo32bht980ihjc78c.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBHgxsGLyBeKXVuII3nxckpbbL-HYHxh98"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "837356366256-l32fm3mjsadotbgfo32bht980ihjc78c.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
